@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaceData, HandData, DetectionMetrics } from '../types';
 import { deviceManager } from '../services/deviceManager';
+import { Maximize2, Minimize2, Sparkles, Zap } from 'lucide-react';
 
 export function renderHeadWireframe(
   ctx: CanvasRenderingContext2D,
@@ -156,12 +157,14 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
   matchedMeme,
   showMemeCard,
 }) => {
+  const [isZoomExpanded, setIsZoomExpanded] = useState(false);
+
   return (
     <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between select-none font-mono text-white z-10 crt-scanlines">
       {/* Top Bar Readouts */}
       <div className="flex items-start justify-between w-full">
         {/* Left Status HUD */}
-        <div className="flex flex-col gap-1 bg-[#070b12]/80 border border-cyber-green/50 p-2.5 rounded backdrop-blur-sm shadow-lg shadow-cyber-green/10">
+        <div className="flex flex-col gap-1 bg-[#070b12]/85 border border-cyber-green/50 p-2.5 rounded backdrop-blur-md shadow-lg shadow-cyber-green/10">
           <div className="flex items-center gap-2 text-xs font-bold text-cyber-green">
             <span className="w-2 h-2 rounded-full bg-cyber-green animate-ping" />
             <span>TACTICAL HUD // CONFIDENCE BOOSTER</span>
@@ -171,10 +174,12 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             <span
               className={`font-bold ${
                 metrics.statusText.includes('DETECTED')
-                  ? 'text-cyber-pink animate-pulse'
+                  ? 'text-cyber-pink animate-pulse text-xs'
                   : metrics.statusText.includes('DETECTING')
                   ? 'text-yellow-400'
-                  : 'text-cyber-cyan'
+                  : metrics.statusText.includes('EXPRESSION')
+                  ? 'text-cyan-400'
+                  : 'text-cyber-green'
               }`}
             >
               {metrics.statusText}
@@ -185,10 +190,16 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             <span>YAW: {face.yaw.toFixed(1)}°</span>
             <span>ROLL: {face.roll.toFixed(1)}°</span>
           </div>
+          {metrics.detectedExpression && (
+            <div className="mt-0.5 inline-flex items-center gap-1.5 text-[10px] font-bold text-cyber-cyan bg-cyan-950/60 border border-cyan-500/40 px-1.5 py-0.5 rounded w-fit animate-pulse">
+              <Zap className="w-3 h-3 text-cyan-400" />
+              <span>{metrics.detectedExpression}</span>
+            </div>
+          )}
         </div>
 
-        {/* Right Broadcasting & Audio Gauge */}
-        <div className="flex flex-col items-end gap-1.5">
+        {/* Right Broadcasting & Audio Gauge & Matched Meme Card */}
+        <div className="flex flex-col items-end gap-2 pointer-events-auto">
           <div className="flex items-center gap-2 bg-[#070b12]/80 border border-cyber-green/40 px-3 py-1.5 rounded backdrop-blur-sm">
             <span
               className={`w-2 h-2 rounded-full ${
@@ -213,26 +224,58 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             </div>
           )}
 
-          {/* Matched Meme Card if active */}
+          {/* Matched Meme Card with "jumin and jumout" Zoom In/Out Animation */}
           {showMemeCard && matchedMeme && (
-            <div className="mt-2 bg-[#070b12]/90 border-2 border-cyber-cyan rounded p-2 flex items-center gap-2.5 shadow-xl shadow-cyber-cyan/20 pointer-events-auto">
-              <img
-                src={matchedMeme.image}
-                alt={matchedMeme.name}
-                className="w-12 h-12 rounded object-cover border border-cyber-cyan/50"
-              />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-cyber-cyan/70 font-bold">MATCHED MEME</span>
-                <span className="text-xs font-bold text-white">{matchedMeme.name}</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-16 h-1 bg-gray-800 rounded overflow-hidden">
-                    <div
-                      className="h-full bg-cyber-cyan"
-                      style={{ width: `${matchedMeme.percentage}%` }}
-                    />
+            <div
+              className={`relative bg-[#070b12]/95 border-2 border-cyan-400/90 rounded-lg p-2.5 shadow-2xl shadow-cyan-500/30 transition-all duration-300 ${
+                isZoomExpanded ? 'scale-110 ring-2 ring-cyan-300' : 'hover:scale-105'
+              } animate-jumin-jumout cursor-pointer select-none`}
+              onClick={() => setIsZoomExpanded((prev) => !prev)}
+              title="Click to Zoom In / Zoom Out meme preview"
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative overflow-hidden rounded border border-cyan-400/80 bg-black/50">
+                  <img
+                    src={matchedMeme.image}
+                    alt={matchedMeme.name}
+                    className={`object-cover transition-all duration-500 ${
+                      isZoomExpanded ? 'w-24 h-24 scale-110' : 'w-14 h-14'
+                    }`}
+                  />
+                  <div className="absolute top-0 right-0 p-0.5 bg-black/70 rounded-bl text-cyan-300">
+                    {isZoomExpanded ? (
+                      <Minimize2 className="w-3 h-3" />
+                    ) : (
+                      <Maximize2 className="w-3 h-3" />
+                    )}
                   </div>
-                  <span className="text-[9px] text-cyber-cyan font-bold">
-                    {matchedMeme.percentage}%
+                </div>
+
+                <div className="flex flex-col min-w-[120px]">
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" />
+                    <span className="text-[10px] text-cyan-400/90 font-bold uppercase tracking-wide">
+                      MEME MATCH
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-white leading-tight max-w-[150px] truncate">
+                    {matchedMeme.name}
+                  </span>
+
+                  {/* Similarity score bar */}
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden border border-cyan-900">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-200"
+                        style={{ width: `${matchedMeme.percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] text-cyan-300 font-bold">
+                      {matchedMeme.percentage}%
+                    </span>
+                  </div>
+                  <span className="text-[8px] text-cyan-400/60 mt-0.5 text-right font-sans">
+                    JUMIN & JUMOUT // ACTIVE
                   </span>
                 </div>
               </div>
@@ -241,42 +284,84 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
         </div>
       </div>
 
-      {/* Middle Screen Targeting Reticles & Detection Gauges */}
+      {/* Middle Screen Multi-Factor Detection Gauges */}
       <div className="flex justify-between items-center w-full px-2">
-        {/* Left Drink Progress Gauge */}
-        <div className="flex flex-col items-center gap-1 bg-black/40 p-2 rounded border border-cyber-green/20 backdrop-blur-xs">
-          <span className="text-[9px] text-cyber-green/80 font-bold">DRINK SIP</span>
-          <div className="w-2.5 h-24 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
-            <div
-              className={`w-full transition-all duration-100 rounded-sm ${
-                metrics.drinkScore > 0.8
-                  ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
-                  : 'bg-cyber-green'
-              }`}
-              style={{ height: `${Math.min(100, Math.round(metrics.drinkScore * 100))}%` }}
-            />
+        {/* Left Side: Drink Sip & Smile/Laugh Gauges */}
+        <div className="flex items-center gap-2">
+          {/* Drink Progress Gauge */}
+          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyber-green/30 backdrop-blur-xs">
+            <span className="text-[8px] text-cyber-green/80 font-bold">DRINK</span>
+            <div className="w-2.5 h-20 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
+              <div
+                className={`w-full transition-all duration-100 rounded-sm ${
+                  metrics.drinkScore > 0.75
+                    ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
+                    : 'bg-cyber-green'
+                }`}
+                style={{ height: `${Math.min(100, Math.round(metrics.drinkScore * 100))}%` }}
+              />
+            </div>
+            <span className="text-[9px] text-gray-300">
+              {Math.round(metrics.drinkScore * 100)}%
+            </span>
           </div>
-          <span className="text-[9px] text-gray-300">
-            {Math.round(metrics.drinkScore * 100)}%
-          </span>
+
+          {/* Smile / Laugh Gauge */}
+          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-amber-400/30 backdrop-blur-xs">
+            <span className="text-[8px] text-amber-400/90 font-bold">SMILE</span>
+            <div className="w-2.5 h-20 bg-gray-900 border border-amber-400/40 rounded flex flex-col justify-end p-0.5">
+              <div
+                className={`w-full transition-all duration-100 rounded-sm ${
+                  metrics.smileScore > 0.70
+                    ? 'bg-amber-400 shadow-md shadow-amber-400'
+                    : 'bg-amber-500/70'
+                }`}
+                style={{ height: `${Math.min(100, Math.round(metrics.smileScore * 100))}%` }}
+              />
+            </div>
+            <span className="text-[9px] text-gray-300">
+              {Math.round(metrics.smileScore * 100)}%
+            </span>
+          </div>
         </div>
 
-        {/* Right Glasses Progress Gauge */}
-        <div className="flex flex-col items-center gap-1 bg-black/40 p-2 rounded border border-cyber-green/20 backdrop-blur-xs">
-          <span className="text-[9px] text-cyber-green/80 font-bold">GLASSES</span>
-          <div className="w-2.5 h-24 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
-            <div
-              className={`w-full transition-all duration-100 rounded-sm ${
-                metrics.glassesScore > 0.8
-                  ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
-                  : 'bg-cyber-green'
-              }`}
-              style={{ height: `${Math.min(100, Math.round(metrics.glassesScore * 100))}%` }}
-            />
+        {/* Right Side: Glasses & Batman Sigma Gauges */}
+        <div className="flex items-center gap-2">
+          {/* Batman Sigma Face Gauge */}
+          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyan-400/30 backdrop-blur-xs">
+            <span className="text-[8px] text-cyan-400/90 font-bold">SIGMA</span>
+            <div className="w-2.5 h-20 bg-gray-900 border border-cyan-400/40 rounded flex flex-col justify-end p-0.5">
+              <div
+                className={`w-full transition-all duration-100 rounded-sm ${
+                  metrics.sigmaScore > 0.65
+                    ? 'bg-cyan-400 shadow-md shadow-cyan-400'
+                    : 'bg-cyan-600/70'
+                }`}
+                style={{ height: `${Math.min(100, Math.round(metrics.sigmaScore * 100))}%` }}
+              />
+            </div>
+            <span className="text-[9px] text-gray-300">
+              {Math.round(metrics.sigmaScore * 100)}%
+            </span>
           </div>
-          <span className="text-[9px] text-gray-300">
-            {Math.round(metrics.glassesScore * 100)}%
-          </span>
+
+          {/* Glasses Adjust Gauge */}
+          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyber-green/30 backdrop-blur-xs">
+            <span className="text-[8px] text-cyber-green/80 font-bold">GLASSES</span>
+            <div className="w-2.5 h-20 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
+              <div
+                className={`w-full transition-all duration-100 rounded-sm ${
+                  metrics.glassesScore > 0.75
+                    ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
+                    : 'bg-cyber-green'
+                }`}
+                style={{ height: `${Math.min(100, Math.round(metrics.glassesScore * 100))}%` }}
+              />
+            </div>
+            <span className="text-[9px] text-gray-300">
+              {Math.round(metrics.glassesScore * 100)}%
+            </span>
+          </div>
         </div>
       </div>
 

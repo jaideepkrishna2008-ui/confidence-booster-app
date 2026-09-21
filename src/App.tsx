@@ -26,7 +26,7 @@ export const App: React.FC = () => {
   const [soundMuted, setSoundMuted] = useState(phonkAudio.isMuted());
   const [volume, setVolume] = useState(phonkAudio.getVolume());
 
-  const [triggerMode, setTriggerMode] = useState<TriggerMode>('both');
+  const [triggerMode, setTriggerMode] = useState<TriggerMode>('all');
   const [selectedPreset, setSelectedPreset] = useState<EditPreset>('ghost_trail_impact');
   const [selectedTrack, setSelectedTrack] = useState<string>('montagem_tomada');
   const [sensitivity, setSensitivity] = useState(gestureDetector.getSensitivity());
@@ -39,8 +39,9 @@ export const App: React.FC = () => {
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
 
   // Meme Matcher Mode state
-  const [isMemeMode, setIsMemeMode] = useState(false);
+  const [isMemeMode, setIsMemeMode] = useState(true);
   const [matchedMeme, setMatchedMeme] = useState<{ name: string; percentage: number; image: string } | null>(null);
+  const matchedMemeRef = useRef<{ name: string; percentage: number; image: string } | null>(null);
 
   // Download clip state
   const [hasDownloadableClip, setHasDownloadableClip] = useState(false);
@@ -74,6 +75,12 @@ export const App: React.FC = () => {
   const [metrics, setMetrics] = useState<DetectionMetrics>({
     drinkScore: 0,
     glassesScore: 0,
+    smileScore: 0,
+    mouthOpenness: 0,
+    surpriseScore: 0,
+    sigmaScore: 0,
+    crazyScore: 0,
+    detectedExpression: null,
     statusText: 'INITIALIZING CAMERA & AI...',
   });
 
@@ -307,6 +314,7 @@ export const App: React.FC = () => {
               },
               getSessionFrames: () => frameBuffer.getSessionFrames(),
               getPostTriggerMoments: (now) => frameBuffer.getPostTriggerMoments(sessionStartTime, now),
+              matchedMemeImage: matchedMemeRef.current?.image || '/memes/batman_sigma_smirk.png',
               onDropImpact: onImpact,
               onComplete: onEnd,
             });
@@ -352,30 +360,17 @@ export const App: React.FC = () => {
           setHandData(result.hands);
           setMetrics(result.metrics);
 
-          // Optional: Meme matching computation
-          if (isMemeMode && result.face.detected) {
-            const userFeatures: Record<string, number> = {
-              surprise_score: result.metrics.drinkScore,
-              smile_score: result.metrics.glassesScore,
-              concern_score: 0.1,
-              cheers_score: result.metrics.drinkScore * (result.hands.points.length > 0 ? 1 : 0),
-              hand_raised: result.hands.points.length > 0 ? 1 : 0,
-              num_hands: result.hands.points.length > 0 ? 1 : 0,
-              eye_openness: 0.25,
-              eyes_symmetry: 0.03,
-              mouth_openness: 0.15,
-              mouth_width_ratio: 0.55,
-              mouth_elevation: 0.08,
-              eyebrow_height: 0.08,
-              brow_symmetry: 0.02,
-            };
-            const match = MemeMatcher.findBestMatch(userFeatures);
+          // Real-time Meme matching computation using actual face landmarks
+          if (isMemeMode && result.face.detected && result.faceFeatures) {
+            const match = MemeMatcher.findBestMatch(result.faceFeatures);
             if (match.meme) {
-              setMatchedMeme({
+              const matchedData = {
                 name: match.meme.name,
                 percentage: match.percentage,
                 image: match.meme.image,
-              });
+              };
+              matchedMemeRef.current = matchedData;
+              setMatchedMeme(matchedData);
             }
           }
 

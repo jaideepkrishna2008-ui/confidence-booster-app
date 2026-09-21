@@ -155,11 +155,14 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         <select
           value={triggerMode}
           onChange={(e) => onChangeTriggerMode(e.target.value as TriggerMode)}
-          className="hidden md:block bg-black/80 border border-gray-700 text-gray-300 text-[11px] rounded px-2 py-1 outline-none cursor-pointer"
+          className="hidden md:block bg-black/80 border border-cyber-green/50 text-cyber-green text-[11px] rounded px-2 py-1 outline-none cursor-pointer"
         >
-          <option value="both">Trigger: BOTH (Drink/Glasses)</option>
-          <option value="drink">Trigger: DRINK SIP ONLY</option>
-          <option value="glasses">Trigger: GLASSES ONLY</option>
+          <option value="all">AUTO: ALL (Crazy / Face / Drink / Glasses)</option>
+          <option value="expression">TRIGGER: FACIAL EXPRESSIONS ONLY</option>
+          <option value="crazy">TRIGGER: CRAZY MOTION ONLY</option>
+          <option value="both">TRIGGER: DRINK & GLASSES</option>
+          <option value="drink">TRIGGER: DRINK SIP ONLY</option>
+          <option value="glasses">TRIGGER: GLASSES ONLY</option>
         </select>
 
         {/* Manual Lock-In / Boost Button */}

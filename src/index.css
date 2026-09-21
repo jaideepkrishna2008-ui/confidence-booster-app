@@ -24,6 +24,42 @@
   }
 }
 
+@keyframes juminJumout {
+  0% {
+    transform: scale(0.95);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 18px rgba(0, 255, 204, 0.75));
+  }
+  100% {
+    transform: scale(0.95);
+  }
+}
+
+.animate-jumin-jumout {
+  animation: juminJumout 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes punchZoom {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.32);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-punch-zoom {
+  animation: punchZoom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

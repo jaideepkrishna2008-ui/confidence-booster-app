@@ -4,7 +4,7 @@ export type EditPreset = 'ghost_trail_impact' | 'dark_manga_strobe' | 'parallax_
 
 export type TrackId = 'montagem_tomada' | 'mogger' | 'marlon_mogged';
 
-export type TriggerMode = 'both' | 'drink' | 'glasses';
+export type TriggerMode = 'all' | 'expression' | 'crazy' | 'drink' | 'glasses' | 'both';
 
 export type TakeoverMode = 'fullscreen' | 'pip';
 
@@ -35,6 +35,12 @@ export interface HandData {
 export interface DetectionMetrics {
   drinkScore: number;
   glassesScore: number;
+  smileScore: number;
+  mouthOpenness: number;
+  surpriseScore: number;
+  sigmaScore: number;
+  crazyScore: number;
+  detectedExpression: string | null;
   statusText: string;
 }
 
@@ -42,7 +48,8 @@ export interface DetectionResult {
   face: FaceData;
   hands: HandData;
   metrics: DetectionMetrics;
-  triggeredAction: 'drink' | 'glasses' | null;
+  faceFeatures?: Record<string, number>;
+  triggeredAction: 'drink' | 'glasses' | 'expression' | 'crazy' | null;
 }
 
 export interface FrameItem {

@@ -15,6 +15,7 @@ export interface EditRenderOptions {
   getCurrentEyeCenter?: () => { x: number; y: number } | undefined;
   getSessionFrames?: () => FrameItem[];
   getPostTriggerMoments?: (time: number) => any;
+  matchedMemeImage?: string;
   onDropImpact?: () => void;
   onComplete?: () => void;
 }
@@ -26,9 +27,109 @@ class EditRenderer {
   private currentTargetWin: Window | null = null;
   private moggedImage: HTMLImageElement | null = null;
   private moggedImageLoaded: boolean = false;
+  private currentMemeImage: HTMLImageElement | null = null;
+  private currentMemeSrc: string = '';
 
   constructor() {
     this.loadMoggedPng();
+  }
+
+  loadMeme(src?: string): void {
+    const targetSrc = src || '/memes/batman_sigma_smirk.png';
+    if (this.currentMemeSrc === targetSrc && this.currentMemeImage) return;
+    this.currentMemeSrc = targetSrc;
+    const img = new Image();
+    img.src = targetSrc;
+    img.onload = () => {
+      this.currentMemeImage = img;
+    };
+  }
+
+  renderMemeZoomInOut(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    elapsed: number,
+    triggerTime: number,
+    duration: number = 850,
+    label: string = 'BATMAN // SIGMA DROP'
+  ): void {
+    const img = this.currentMemeImage || this.moggedImage;
+    if (!img) return;
+
+    const rel = elapsed - triggerTime;
+    if (rel < 0 || rel > duration) return;
+
+    const p = rel / duration;
+    // Jumin and jumout:
+    // Stage 1 (0..0.38): explosive zoom in ("jumin") from 0.65x to 1.35x
+    // Stage 2 (0.38..1.0): smooth cinematic zoom out ("jumout") from 1.35x down to 1.0x with fade out
+    let scale: number;
+    let alpha: number;
+    if (p < 0.38) {
+      const sub = p / 0.38;
+      const ease = 1 - Math.pow(1 - sub, 3);
+      scale = 0.65 + ease * 0.70; // 0.65 -> 1.35
+      alpha = Math.min(1, sub * 1.6);
+    } else {
+      const sub = (p - 0.38) / 0.62;
+      scale = 1.35 - sub * 0.35; // 1.35 -> 1.00
+      alpha = 1 - sub * sub;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha * 0.95));
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const size = Math.min(w * 0.52, h * 0.52, 360);
+
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -cy);
+
+    const x = cx - size / 2;
+    const y = cy - size / 2;
+
+    // Glowing cyber neon border and drop shadow
+    ctx.shadowColor = '#00ffcc';
+    ctx.shadowBlur = 25;
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 3.5;
+
+    ctx.save();
+    ctx.beginPath();
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(x, y, size, size, 16);
+    } else {
+      ctx.rect(x, y, size, size);
+    }
+    ctx.clip();
+    this.drawCover(ctx, img, x, y, size, size, false);
+    ctx.restore();
+
+    // Border
+    ctx.beginPath();
+    if (typeof (ctx as any).roundRect === 'function') {
+      (ctx as any).roundRect(x, y, size, size, 16);
+    } else {
+      ctx.rect(x, y, size, size);
+    }
+    ctx.stroke();
+
+    // Top cyber badge
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+    ctx.fillRect(cx - 100, y - 16, 200, 24);
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx - 100, y - 16, 200, 24);
+    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, y - 4);
+
+    ctx.restore();
   }
 
   loadMoggedPng(): void {
@@ -52,7 +153,7 @@ class EditRenderer {
 
   drawCover(
     ctx: CanvasRenderingContext2D,
-    source: ImageBitmap | HTMLVideoElement | HTMLCanvasElement,
+    source: ImageBitmap | HTMLVideoElement | HTMLCanvasElement | HTMLImageElement,
     x: number,
     y: number,
     w: number,
@@ -119,6 +220,7 @@ class EditRenderer {
       return;
     }
 
+    this.loadMeme(options.matchedMemeImage);
     if (!this.moggedImageLoaded) {
       this.loadMoggedPng();
     }
@@ -308,6 +410,10 @@ class EditRenderer {
           zoomTakeoverEnd,
           isMirrored
         );
+      }
+
+      if (elapsed >= hardSnapsStart && elapsed < hardSnapsStart + 850) {
+        this.renderMemeZoomInOut(ctx, cw, ch, elapsed, hardSnapsStart, 850, 'BATMAN // SIGMA DROP');
       }
 
       ctx.restore();
@@ -555,6 +661,8 @@ class EditRenderer {
 
     const ctx = canvas.getContext('2d', { willReadFrequently: false });
     if (!ctx) return;
+
+    this.loadMeme(options.matchedMemeImage);
 
     const startTime = options.startTime ?? performance.now();
     const durationMs = options.durationMs ?? 15940;
@@ -863,6 +971,10 @@ class EditRenderer {
           ctx.fillRect(0, 0, cw, ch);
           ctx.restore();
         }
+
+        if (elapsed >= 4940 && elapsed < 5800) {
+          this.renderMemeZoomInOut(ctx, cw, ch, elapsed, 4940, 850, 'SIGMA // DROP IMPACT');
+        }
       } else {
         // Outro fade
         let outroTarget: FrameItem | undefined;
@@ -945,6 +1057,8 @@ class EditRenderer {
 
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
+
+    this.loadMeme(options.matchedMemeImage);
 
     const startTime = options.startTime ?? performance.now();
     const durationMs = options.durationMs ?? 15070;
@@ -1160,6 +1274,10 @@ class EditRenderer {
           drawFrameOrVideo(target);
         }
         ctx.restore();
+      }
+
+      if (elapsed >= dropTime && elapsed < dropTime + 850) {
+        this.renderMemeZoomInOut(ctx, cw, ch, elapsed, dropTime, 850, 'DARK MANGA // MOGGED');
       }
 
       ctx.restore();
