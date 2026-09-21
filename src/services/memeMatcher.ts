@@ -353,29 +353,57 @@ export class MemeMatcher {
     return totalScore;
   }
 
-  static findBestMatch(userFeatures: Record<string, number> | null): {
+  static findBestMatch(userFeatures: Record<string, number> | null, randomize: boolean = false): {
     meme: MemeInfo | null;
     score: number;
     percentage: number;
   } {
     if (!userFeatures) return { meme: null, score: 0, percentage: 0 };
 
-    let bestMeme: MemeInfo | null = null;
-    let maxScore = -1;
     const maxPossible = FEATURE_WEIGHTS.reduce((a, b) => a + b, 0);
 
-    for (const meme of MEME_PROFILES) {
+    // Score all memes
+    const scoredMemes = MEME_PROFILES.map(meme => {
       const score = this.computeSimilarity(userFeatures, meme.features);
-      if (score > maxScore) {
-        maxScore = score;
-        bestMeme = meme;
+      return { meme, score };
+    });
+
+    // Sort descending by score
+    scoredMemes.sort((a, b) => b.score - a.score);
+
+    let bestMeme = scoredMemes[0].meme;
+    let bestScore = scoredMemes[0].score;
+
+    // Introduce randomization among the top candidates if requested
+    if (randomize && scoredMemes.length > 1) {
+      // Find how many memes are within 15% of the top score
+      const threshold = bestScore * 0.85;
+      const topCandidates = scoredMemes.filter(m => m.score >= threshold);
+      
+      if (topCandidates.length > 1) {
+        // Only switch the selected meme periodically (e.g., if we aren't holding the same meme recently)
+        // Or we just pick a random one from the top candidates. 
+        // To prevent rapid flickering every frame, we only pick a new random one if the user just crossed the threshold,
+        // but wait, MemeMatcher is called every frame. If we do pure random here, it will flicker wildly.
+        // Instead, we can use a slow changing noise based on time, or just keep the logic deterministic but add a small random noise to the features beforehand?
+        // Actually, let's keep it simple: if the last meme is in the top candidates, stick with it to prevent flicker. 
+        // Otherwise pick randomly.
+        const lastMemeInTop = topCandidates.find(c => c.meme.id === this.lastMemeId);
+        if (lastMemeInTop) {
+          bestMeme = lastMemeInTop.meme;
+          bestScore = lastMemeInTop.score;
+        } else {
+          const randIdx = Math.floor(Math.random() * topCandidates.length);
+          bestMeme = topCandidates[randIdx].meme;
+          bestScore = topCandidates[randIdx].score;
+        }
       }
     }
 
     if (!bestMeme) return { meme: null, score: 0, percentage: 0 };
 
     // Calculate normalized percentage (typically 45% - 98%)
-    const rawPercentage = (maxScore / maxPossible) * 100;
+    const rawPercentage = (bestScore / maxPossible) * 100;
     // Map raw percentage nicely to user-intuitive range: min baseline ~45%, peak ~98%
     const normalized = Math.min(99, Math.max(35, Math.round(rawPercentage * 1.08)));
 
@@ -389,7 +417,7 @@ export class MemeMatcher {
 
     return {
       meme: bestMeme,
-      score: maxScore,
+      score: bestScore,
       percentage: this.lastSmoothedScore,
     };
   }
