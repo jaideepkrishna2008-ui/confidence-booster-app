@@ -16,7 +16,24 @@ import { recorderService } from './services/recorderService';
 import { MemeMatcher, MemeInfo } from './services/memeMatcher';
 import { AiMemeBrain } from './services/aiMemeBrain';
 import { memeAssets } from './services/memeAssets';
-import { AppState, TriggerMode, EditPreset, FaceData, HandData, DetectionMetrics, TakeoverMode, FrameItem } from './types';
+import { ShuffleBag } from './services/shuffleBag';
+import { AppState, TriggerMode, EditPreset, FaceData, HandData, DetectionMetrics, TakeoverMode, FrameItem, TrackId } from './types';
+
+const globalPresetsBag = new ShuffleBag<EditPreset>([
+  'ghost_trail_impact',
+  'dark_manga_strobe',
+  'sigma_hard_snaps',
+  'parallax_dual_speed'
+]);
+
+const globalTracksBag = new ShuffleBag<TrackId>([
+  'montagem_tomada',
+  'mogger',
+  'marlon_mogged',
+  'tokyo_drift',
+  'cyber_sigma',
+  'gigachad_anthem'
+]);
 
 export const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>('STANDBY');
@@ -261,17 +278,8 @@ export const App: React.FC = () => {
               }
 
               if (autoCyclePresets) {
-                const presets: EditPreset[] = [
-                  'ghost_trail_impact',
-                  'dark_manga_strobe',
-                  'sigma_hard_snaps',
-                  'parallax_dual_speed'
-                ];
-                const tracks = [
-                  'montagem_tomada', 'mogger', 'marlon_mogged', 'tokyo_drift', 'cyber_sigma', 'gigachad_anthem'
-                ];
-                const nextPreset = presets[Math.floor(Math.random() * presets.length)];
-                const nextTrack = tracks[Math.floor(Math.random() * tracks.length)];
+                const nextPreset = globalPresetsBag.next();
+                const nextTrack = globalTracksBag.next();
                 
                 handlePresetChange(nextPreset);
                 setSelectedTrack(nextTrack);

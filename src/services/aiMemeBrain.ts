@@ -1,5 +1,6 @@
 import { MemeInfo, MemeMatcher } from './memeMatcher';
 import { EditPreset, TrackId } from '../types';
+import { ShuffleBag } from './shuffleBag';
 
 export interface AiBrainDecision {
   matchedMeme: MemeInfo | null;
@@ -25,6 +26,12 @@ export class AiMemeBrain {
   private static lockedFaceType: string | null = null;
   private static lockedPreset: EditPreset = 'ghost_trail_impact';
   private static lockedTrack: TrackId = 'montagem_tomada';
+
+  private static sigmaTracksBag = new ShuffleBag<TrackId>(['marlon_mogged', 'cyber_sigma', 'gigachad_anthem']);
+  private static laughTracksBag = new ShuffleBag<TrackId>(['montagem_tomada', 'tokyo_drift']);
+  private static shockTracksBag = new ShuffleBag<TrackId>(['mogger', 'cyber_sigma']);
+  private static toastTracksBag = new ShuffleBag<TrackId>(['montagem_tomada', 'gigachad_anthem']);
+  private static allPresetsBag = new ShuffleBag<EditPreset>(['sigma_hard_snaps', 'ghost_trail_impact', 'dark_manga_strobe', 'parallax_dual_speed']);
 
   static analyze(userFeatures: Record<string, number> | null): AiBrainDecision {
     if (!userFeatures) {
@@ -74,24 +81,18 @@ export class AiMemeBrain {
     if (funnyFaceType !== this.lockedFaceType && isFunnyFace) {
       this.lockedFaceType = funnyFaceType;
       
-      const sigmaTracks: TrackId[] = ['marlon_mogged', 'cyber_sigma', 'gigachad_anthem'];
-      const laughTracks: TrackId[] = ['montagem_tomada', 'tokyo_drift'];
-      const shockTracks: TrackId[] = ['mogger', 'cyber_sigma'];
-      const toastTracks: TrackId[] = ['montagem_tomada', 'gigachad_anthem'];
-      const allPresets: EditPreset[] = ['sigma_hard_snaps', 'ghost_trail_impact', 'dark_manga_strobe', 'parallax_dual_speed'];
-
-      // Assign randomly from pools
+      // Assign randomly from pools without immediate repeats
       if (funnyFaceType === 'sigma') {
-        this.lockedTrack = sigmaTracks[Math.floor(Math.random() * sigmaTracks.length)];
-        this.lockedPreset = 'sigma_hard_snaps'; // best for sigma
+        this.lockedTrack = this.sigmaTracksBag.next();
+        this.lockedPreset = 'sigma_hard_snaps';
       } else if (funnyFaceType === 'laugh') {
-        this.lockedTrack = laughTracks[Math.floor(Math.random() * laughTracks.length)];
-        this.lockedPreset = allPresets[Math.floor(Math.random() * allPresets.length)];
+        this.lockedTrack = this.laughTracksBag.next();
+        this.lockedPreset = this.allPresetsBag.next();
       } else if (funnyFaceType === 'shock') {
-        this.lockedTrack = shockTracks[Math.floor(Math.random() * shockTracks.length)];
-        this.lockedPreset = 'dark_manga_strobe'; // best for shock
+        this.lockedTrack = this.shockTracksBag.next();
+        this.lockedPreset = 'dark_manga_strobe';
       } else if (funnyFaceType === 'glasses') {
-        this.lockedTrack = toastTracks[Math.floor(Math.random() * toastTracks.length)];
+        this.lockedTrack = this.toastTracksBag.next();
         this.lockedPreset = 'parallax_dual_speed';
       }
     } else if (!isFunnyFace) {
