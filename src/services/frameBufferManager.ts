@@ -21,6 +21,7 @@ class FrameBufferManager {
   private isCapturing: boolean = true;
   private isPushing: boolean = false;
   private protectedBitmaps: Set<ImageBitmap> = new Set();
+  private clipProtectedBitmaps: Set<ImageBitmap> = new Set();
   private isSessionActive: boolean = false;
   private sessionFrames: FrameItem[] = [];
   private sessionStartTimestamp: number = 0;
@@ -64,11 +65,13 @@ class FrameBufferManager {
 
     this.isSessionActive = false;
     for (const frame of this.sessionFrames) {
-      this.protectedBitmaps.delete(frame.bitmap);
-      if (!this.buffer.some((f) => f.bitmap === frame.bitmap)) {
-        try {
-          frame.bitmap.close();
-        } catch {}
+      if (!this.clipProtectedBitmaps.has(frame.bitmap)) {
+        this.protectedBitmaps.delete(frame.bitmap);
+        if (!this.buffer.some((f) => f.bitmap === frame.bitmap)) {
+          try {
+            frame.bitmap.close();
+          } catch {}
+        }
       }
     }
     this.sessionFrames = [];
@@ -119,8 +122,10 @@ class FrameBufferManager {
       while (this.buffer.length > 0 && this.buffer[0].timestamp < cutoff) {
         const old = this.buffer.shift();
         if (old) {
-          if (!this.protectedBitmaps.has(old.bitmap)) {
-            old.bitmap.close();
+          if (!this.protectedBitmaps.has(old.bitmap) && !this.clipProtectedBitmaps.has(old.bitmap)) {
+            try {
+              old.bitmap.close();
+            } catch {}
           }
         }
       }
@@ -143,6 +148,7 @@ class FrameBufferManager {
 
     for (const frame of clip) {
       this.protectedBitmaps.add(frame.bitmap);
+      this.clipProtectedBitmaps.add(frame.bitmap);
     }
     return [...clip];
   }
@@ -150,6 +156,7 @@ class FrameBufferManager {
   releaseClip(clip: FrameItem[]): void {
     if (!clip || clip.length === 0) return;
     for (const frame of clip) {
+      this.clipProtectedBitmaps.delete(frame.bitmap);
       this.protectedBitmaps.delete(frame.bitmap);
       if (!this.buffer.some((b) => b.bitmap === frame.bitmap)) {
         try {
@@ -264,7 +271,7 @@ class FrameBufferManager {
 
   clear(): void {
     for (const item of this.buffer) {
-      if (!this.protectedBitmaps.has(item.bitmap)) {
+      if (!this.protectedBitmaps.has(item.bitmap) && !this.clipProtectedBitmaps.has(item.bitmap)) {
         try {
           item.bitmap.close();
         } catch {}

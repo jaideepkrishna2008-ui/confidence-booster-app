@@ -83,14 +83,32 @@ export const App: React.FC = () => {
     setAppState(newState);
   };
 
+  const handlePresetChange = useCallback((preset: EditPreset) => {
+    setSelectedPreset(preset);
+    if (preset === 'ghost_trail_impact' || preset === 'parallax_dual_speed') {
+      setSelectedTrack('montagem_tomada');
+      phonkAudio.preloadTomadaAudio();
+    } else if (preset === 'dark_manga_strobe') {
+      setSelectedTrack('mogger');
+      phonkAudio.preloadMoggerAudio();
+    } else {
+      setSelectedTrack('marlon_mogged');
+      phonkAudio.preloadMoggedAudio();
+    }
+  }, []);
+
   // State mirror ref for RAF callbacks
   const stateMirrorRef = useRef({
     selectedPreset,
+    selectedTrack,
+    takeoverMode,
     isMirrored,
     faceData: latestFaceRef.current,
   });
   stateMirrorRef.current = {
     selectedPreset,
+    selectedTrack,
+    takeoverMode,
     isMirrored,
     faceData: latestFaceRef.current,
   };
@@ -167,11 +185,9 @@ export const App: React.FC = () => {
     (actionType: string) => {
       if (appStateRef.current !== 'STANDBY') return;
       if (frameBuffer.getFrameCount() < 5) {
-        console.warn('Frame buffer is still filling...');
+        console.warn('Frame buffer is still warming up, please wait a moment...');
         return;
       }
-
-      console.log(`[ConfidenceBooster] Action triggered: ${actionType}`);
 
       const replayFrames = frameBuffer.getReplayClip(3500);
       actionFramesRef.current = replayFrames;
@@ -180,93 +196,125 @@ export const App: React.FC = () => {
       const sessionStartTime = frameBuffer.getSessionStartTimestamp();
 
       setSyncState('EDITING');
+      console.log(`[ConfidenceBooster] Action triggered (${actionType.toUpperCase()})! Pre-roll action clip: ${replayFrames.length} frames.`);
 
-      const targetCanvas = editCanvasRef.current;
-      if (!targetCanvas) return;
-
-      targetCanvas.width = 1280;
-      targetCanvas.height = 720;
-
-      let isFinished = false;
-      const onEnd = () => {
-        if (!isFinished) {
-          isFinished = true;
-          recorderService.stopRecording();
-          setHasDownloadableClip(true);
-          phonkAudio.stop();
-          gestureDetector.resetCooldown();
-          setSyncState('STANDBY');
-          frameBuffer.stopLiveSession();
-          if (actionFramesRef.current) {
-            frameBuffer.releaseClip(actionFramesRef.current);
-            actionFramesRef.current = null;
-          }
-
-          if (autoCyclePresets) {
-            const presets: EditPreset[] = [
-              'ghost_trail_impact',
-              'dark_manga_strobe',
-              'sigma_hard_snaps',
-              'parallax_dual_speed',
-            ];
-            const nextIdx = (presets.indexOf(stateMirrorRef.current.selectedPreset) + 1) % presets.length;
-            const nextPreset = presets[nextIdx];
-            setSelectedPreset(nextPreset);
-            if (nextPreset === 'ghost_trail_impact' || nextPreset === 'parallax_dual_speed') {
-              setSelectedTrack('montagem_tomada');
-            } else if (nextPreset === 'dark_manga_strobe') {
-              setSelectedTrack('mogger');
-            } else {
-              setSelectedTrack('marlon_mogged');
-            }
-          }
-        }
-      };
-
-      const onImpact = () => {
-        // Impact triggers camera shake or custom audio punch
-      };
-
-      // Start recording the canvas edit
-      recorderService.startRecording(targetCanvas, phonkAudio.getAudioStream());
-
-      // Start sound sequence
-      phonkAudio.playEditSequence(selectedTrack, onImpact, onEnd).then((soundInfo) => {
+      window.setTimeout(() => {
         setSyncState('PLAYING');
+        window.setTimeout(() => {
+          let targetCanvas = editCanvasRef.current;
+          let isProjector = false;
 
-        editRenderer.startEdit({
-          canvas: targetCanvas,
-          preset: stateMirrorRef.current.selectedPreset,
-          startTime: soundInfo.startTime,
-          durationMs: soundInfo.durationMs,
-          sessionStartTime,
-          frames: actionFramesRef.current || [],
-          actionFrames: actionFramesRef.current || [],
-          isMirrored: stateMirrorRef.current.isMirrored,
-          eyeCenter: {
-            x: stateMirrorRef.current.isMirrored
-              ? 1 - stateMirrorRef.current.faceData.noseBridge.x
-              : stateMirrorRef.current.faceData.noseBridge.x,
-            y: (stateMirrorRef.current.faceData.leftEye.y + stateMirrorRef.current.faceData.rightEye.y) / 2,
-          },
-          getCurrentEyeCenter: () => {
-            const fd = stateMirrorRef.current.faceData;
-            if (fd.detected) {
-              return {
-                x: stateMirrorRef.current.isMirrored ? 1 - fd.noseBridge.x : fd.noseBridge.x,
-                y: (fd.leftEye.y + fd.rightEye.y) / 2,
-              };
+          if (projectorWinRef.current && !projectorWinRef.current.closed) {
+            try {
+              const pWin = projectorWinRef.current;
+              let pCanvas = projectorCanvasRef.current;
+              if (!pCanvas || !pCanvas.isConnected) {
+                pCanvas = pWin.document.getElementById('projectorCanvas') as HTMLCanvasElement;
+                if (pCanvas) projectorCanvasRef.current = pCanvas;
+              }
+              if (pCanvas) {
+                targetCanvas = pCanvas;
+                isProjector = true;
+              }
+            } catch {}
+          }
+
+          if (!targetCanvas || frameBuffer.getFrameCount() === 0) {
+            console.warn('Canvas or camera frames not available, returning to standby');
+            frameBuffer.stopLiveSession();
+            setSyncState('STANDBY');
+            return;
+          }
+
+          if (isProjector) {
+            targetCanvas.width = 1280;
+            targetCanvas.height = 720;
+          } else if (stateMirrorRef.current.takeoverMode === 'fullscreen') {
+            targetCanvas.width = window.innerWidth;
+            targetCanvas.height = window.innerHeight;
+          } else {
+            targetCanvas.width = 640;
+            targetCanvas.height = 640;
+          }
+
+          recorderService.startRecording(targetCanvas, phonkAudio.getAudioStream());
+
+          let isFinished = false;
+          const onEnd = () => {
+            if (!isFinished) {
+              isFinished = true;
+              recorderService.stopRecording();
+              setHasDownloadableClip(true);
+              phonkAudio.stop();
+              gestureDetector.resetCooldown();
+              setSyncState('STANDBY');
+              frameBuffer.stopLiveSession();
+              if (actionFramesRef.current) {
+                frameBuffer.releaseClip(actionFramesRef.current);
+                actionFramesRef.current = null;
+              }
+
+              if (autoCyclePresets) {
+                const presets: EditPreset[] = [
+                  'ghost_trail_impact',
+                  'dark_manga_strobe',
+                  'sigma_hard_snaps',
+                ];
+                const nextIdx = (presets.indexOf(stateMirrorRef.current.selectedPreset) + 1) % presets.length;
+                const nextPreset = presets[nextIdx];
+                handlePresetChange(nextPreset);
+                console.log(`[AutoCycle] Cycled to preset: ${nextPreset}`);
+              }
             }
-            return undefined;
-          },
-          getSessionFrames: () => frameBuffer.getSessionFrames(),
-          getPostTriggerMoments: (time) => frameBuffer.getPostTriggerMoments(time, soundInfo.durationMs),
-          onDropImpact: onImpact,
-          onComplete: onEnd,
-        });
-      });
+          };
+
+          const onImpact = () => {
+            if ('vibrate' in navigator) {
+              navigator.vibrate([100, 50, 150]);
+            }
+          };
+
+          phonkAudio.playEditSequence(stateMirrorRef.current.selectedTrack, onImpact, onEnd).then((soundInfo) => {
+            const face = stateMirrorRef.current.faceData;
+            const mirrored = stateMirrorRef.current.isMirrored;
+
+            editRenderer.startEdit({
+              canvas: targetCanvas!,
+              preset: stateMirrorRef.current.selectedPreset,
+              startTime: soundInfo.startTime,
+              durationMs: soundInfo.durationMs,
+              sessionStartTime,
+              frames: replayFrames,
+              actionFrames: replayFrames,
+              videoElement: videoRef.current,
+              isMirrored: mirrored,
+              eyeCenter: face.detected
+                ? {
+                    x: mirrored ? 1 - face.noseBridge.x : face.noseBridge.x,
+                    y: (face.leftEye.y + face.rightEye.y) / 2,
+                  }
+                : undefined,
+              getCurrentEyeCenter: () => {
+                const fd = stateMirrorRef.current.faceData;
+                const m = stateMirrorRef.current.isMirrored;
+                if (fd.detected) {
+                  return {
+                    x: m ? 1 - fd.noseBridge.x : fd.noseBridge.x,
+                    y: (fd.leftEye.y + fd.rightEye.y) / 2,
+                  };
+                }
+                return undefined;
+              },
+              getSessionFrames: () => frameBuffer.getSessionFrames(),
+              getPostTriggerMoments: (now) => frameBuffer.getPostTriggerMoments(sessionStartTime, now),
+              onDropImpact: onImpact,
+              onComplete: onEnd,
+            });
+          });
+        }, 50);
+      }, 200);
     },
-    [selectedTrack, autoCyclePresets]
+    [autoCyclePresets, handlePresetChange]
   );
 
   // Continuous Camera Detection and Live Rendering Loop
@@ -523,20 +571,6 @@ export const App: React.FC = () => {
     const newVal = !soundMuted;
     setSoundMuted(newVal);
     phonkAudio.setMuted(newVal);
-  };
-
-  const handlePresetChange = (preset: EditPreset) => {
-    setSelectedPreset(preset);
-    if (preset === 'ghost_trail_impact' || preset === 'parallax_dual_speed') {
-      setSelectedTrack('montagem_tomada');
-      phonkAudio.preloadTomadaAudio();
-    } else if (preset === 'dark_manga_strobe') {
-      setSelectedTrack('mogger');
-      phonkAudio.preloadMoggerAudio();
-    } else {
-      setSelectedTrack('marlon_mogged');
-      phonkAudio.preloadMoggedAudio();
-    }
   };
 
   return (
