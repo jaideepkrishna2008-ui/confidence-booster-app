@@ -95,16 +95,6 @@ export const App: React.FC = () => {
 
   const handlePresetChange = useCallback((preset: EditPreset) => {
     setSelectedPreset(preset);
-    if (preset === 'ghost_trail_impact' || preset === 'parallax_dual_speed') {
-      setSelectedTrack('montagem_tomada');
-      phonkAudio.preloadTomadaAudio();
-    } else if (preset === 'dark_manga_strobe') {
-      setSelectedTrack('mogger');
-      phonkAudio.preloadMoggerAudio();
-    } else {
-      setSelectedTrack('marlon_mogged');
-      phonkAudio.preloadMoggedAudio();
-    }
   }, []);
 
   // State mirror ref for RAF callbacks
@@ -275,11 +265,17 @@ export const App: React.FC = () => {
                   'ghost_trail_impact',
                   'dark_manga_strobe',
                   'sigma_hard_snaps',
+                  'parallax_dual_speed'
                 ];
-                const nextIdx = (presets.indexOf(stateMirrorRef.current.selectedPreset) + 1) % presets.length;
-                const nextPreset = presets[nextIdx];
+                const tracks = [
+                  'montagem_tomada', 'mogger', 'marlon_mogged', 'tokyo_drift', 'cyber_sigma', 'gigachad_anthem'
+                ];
+                const nextPreset = presets[Math.floor(Math.random() * presets.length)];
+                const nextTrack = tracks[Math.floor(Math.random() * tracks.length)];
+                
                 handlePresetChange(nextPreset);
-                console.log(`[AutoCycle] Cycled to preset: ${nextPreset}`);
+                setSelectedTrack(nextTrack);
+                console.log(`[AutoCycle] Cycled to completely random theme: ${nextPreset} + ${nextTrack}`);
               }
             }
           };
