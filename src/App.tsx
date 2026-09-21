@@ -285,6 +285,11 @@ export const App: React.FC = () => {
                 setSelectedTrack(nextTrack);
                 console.log(`[AutoCycle] Cycled to completely random theme: ${nextPreset} + ${nextTrack}`);
               }
+
+              // Force the AI meme brain and matcher to re-roll on the next frame
+              // so they don't overwrite the auto-cycle with old locked tracks!
+              AiMemeBrain.forceReRoll();
+              MemeMatcher.forceReRoll();
             }
           };
 
@@ -561,6 +566,9 @@ export const App: React.FC = () => {
       frameBuffer.releaseClip(actionFramesRef.current);
       actionFramesRef.current = null;
     }
+
+    AiMemeBrain.forceReRoll();
+    MemeMatcher.forceReRoll();
   };
 
   const handleDownloadClip = async () => {

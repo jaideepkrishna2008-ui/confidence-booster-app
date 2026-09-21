@@ -112,4 +112,8 @@ export class AiMemeBrain {
     this.lastDecision = decision;
     return decision;
   }
+
+  static forceReRoll(): void {
+    this.lockedFaceType = null;
+  }
 }

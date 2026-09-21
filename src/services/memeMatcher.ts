@@ -421,4 +421,8 @@ export class MemeMatcher {
       percentage: this.lastSmoothedScore,
     };
   }
+
+  static forceReRoll(): void {
+    this.lastMemeId = '';
+  }
 }
