@@ -1,0 +1,120 @@
+// In-memory Meme Asset Preloader and Cache
+// Guarantees all meme images (Batman Sigma, Undertaker, Heisenberg, Jaideep photos, etc.)
+// are pre-decoded in RAM before playback or HUD display.
+
+export interface MemeAssetItem {
+  id: string;
+  name: string;
+  src: string;
+  image: HTMLImageElement;
+  loaded: boolean;
+}
+
+const MEME_SOURCES: Array<{ id: string; name: string; src: string }> = [
+  { id: 'batman_sigma_smirk', name: 'Batman Sigma Smirk', src: '/memes/batman_sigma_smirk.png' },
+  { id: 'batman_sigma_pout', name: 'Batman Sigma Pout', src: '/memes/batman_sigma_pout.png' },
+  { id: 'batman_sigma', name: 'Patrick Bateman Classic', src: '/memes/batman_sigma.jpg' },
+  { id: 'undertaker_eyes', name: 'The Undertaker Crazy Eyes', src: '/memes/undertaker_eyes.png' },
+  { id: 'heisenberg_arab', name: 'Heisenberg Keffiyeh', src: '/memes/heisenberg_arab.png' },
+  { id: 'jaideep_smile', name: 'Jaideep Bright Smile', src: '/memes/jaideep_smile.png' },
+  { id: 'jaideep_candid', name: 'Jaideep Candid Laugh', src: '/memes/jaideep_candid.jpg' },
+  { id: 'krishna_divine', name: 'Divine Lord Krishna Aura', src: '/memes/krishna_divine.jpg' },
+  { id: 'leonardo_dicaprio', name: 'Leonardo DiCaprio', src: '/memes/leonardo_dicaprio.jpg' },
+  { id: 'success_kid', name: 'Success Kid', src: '/memes/success_kid.jpg' },
+  { id: 'disaster_girl', name: 'Disaster Girl', src: '/memes/disaster_girl.jpg' },
+  { id: 'gene_wilder', name: 'Gene Wilder', src: '/memes/gene_wilder.jpg' },
+  { id: 'overly_attached_girlfriend', name: 'Overly Attached Girlfriend', src: '/memes/overly_attached_girlfriend.jpg' },
+  { id: 'angry_baby', name: 'Angry Baby', src: '/memes/angry_baby.jpg' },
+];
+
+class MemeAssetManager {
+  private cache: Map<string, MemeAssetItem> = new Map();
+  private isPreloading: boolean = false;
+  private fallbackImage: HTMLImageElement | null = null;
+
+  constructor() {
+    this.createFallbackImage();
+    this.preloadAll();
+  }
+
+  private createFallbackImage(): void {
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 300;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#05070a';
+      ctx.fillRect(0, 0, 300, 300);
+      ctx.strokeStyle = '#00ffcc';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(10, 10, 280, 280);
+      ctx.fillStyle = '#00ffcc';
+      ctx.font = 'bold 22px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('SIGMA MEME', 150, 140);
+      ctx.fillText('MOGGED', 150, 175);
+    }
+    const img = new Image();
+    img.src = canvas.toDataURL('image/png');
+    this.fallbackImage = img;
+  }
+
+  preloadAll(): void {
+    if (this.isPreloading) return;
+    this.isPreloading = true;
+
+    for (const item of MEME_SOURCES) {
+      const img = new Image();
+      const assetItem: MemeAssetItem = {
+        id: item.id,
+        name: item.name,
+        src: item.src,
+        image: img,
+        loaded: false,
+      };
+
+      img.onload = () => {
+        assetItem.loaded = true;
+        console.log(`[MemeAssets] Preloaded ${item.id} (${item.src})`);
+      };
+
+      img.onerror = () => {
+        console.warn(`[MemeAssets] Failed to load ${item.src}, trying relative fallback`);
+        // Fallback relative path
+        img.src = `.${item.src}`;
+      };
+
+      img.src = item.src;
+      this.cache.set(item.id, assetItem);
+      this.cache.set(item.src, assetItem);
+    }
+  }
+
+  getMemeImage(srcOrId: string): HTMLImageElement {
+    const cached = this.cache.get(srcOrId);
+    if (cached && cached.loaded && cached.image.complete && cached.image.naturalWidth > 0) {
+      return cached.image;
+    }
+
+    // Try finding by partial match
+    for (const [key, item] of this.cache.entries()) {
+      if ((key.includes(srcOrId) || srcOrId.includes(key)) && item.loaded) {
+        return item.image;
+      }
+    }
+
+    // Default to Batman Sigma Smirk if available
+    const defaultMeme = this.cache.get('batman_sigma_smirk') || this.cache.get('/memes/batman_sigma_smirk.png');
+    if (defaultMeme && defaultMeme.loaded) {
+      return defaultMeme.image;
+    }
+
+    return this.fallbackImage || new Image();
+  }
+
+  getAllAssets(): MemeAssetItem[] {
+    return Array.from(new Set(this.cache.values()));
+  }
+}
+
+export const memeAssets = new MemeAssetManager();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FaceData, HandData, DetectionMetrics } from '../types';
 import { deviceManager } from '../services/deviceManager';
-import { Maximize2, Minimize2, Sparkles, Zap } from 'lucide-react';
+import { Maximize2, Minimize2, Sparkles, Zap, Brain, Activity } from 'lucide-react';
 
 export function renderHeadWireframe(
   ctx: CanvasRenderingContext2D,
@@ -146,6 +146,7 @@ interface TacticalHUDProps {
   isBroadcasting: boolean;
   audioLevel: number;
   matchedMeme?: { name: string; percentage: number; image: string } | null;
+  aiThought?: string;
   showMemeCard?: boolean;
 }
 
@@ -155,28 +156,38 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
   isBroadcasting,
   audioLevel,
   matchedMeme,
+  aiThought,
   showMemeCard,
 }) => {
   const [isZoomExpanded, setIsZoomExpanded] = useState(false);
 
+  // Fallback meme if none matched yet
+  const displayMeme = matchedMeme || {
+    name: 'Batman Sigma Smirk',
+    percentage: 88,
+    image: '/memes/batman_sigma_smirk.png',
+  };
+
+  const isLockingIn = metrics.statusText.includes('LOCKING IN');
+
   return (
-    <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between select-none font-mono text-white z-10 crt-scanlines">
+    <div className="absolute inset-0 pointer-events-none p-3 flex flex-col justify-between select-none font-mono text-white z-10 crt-scanlines">
       {/* Top Bar Readouts */}
-      <div className="flex items-start justify-between w-full">
+      <div className="flex items-start justify-between w-full flex-wrap gap-2">
         {/* Left Status HUD */}
-        <div className="flex flex-col gap-1 bg-[#070b12]/85 border border-cyber-green/50 p-2.5 rounded backdrop-blur-md shadow-lg shadow-cyber-green/10">
+        <div className="flex flex-col gap-1 bg-[#070b12]/90 border border-cyber-green/50 p-2.5 rounded-lg backdrop-blur-md shadow-lg shadow-cyber-green/10 max-w-[340px]">
           <div className="flex items-center gap-2 text-xs font-bold text-cyber-green">
             <span className="w-2 h-2 rounded-full bg-cyber-green animate-ping" />
             <span>TACTICAL HUD // CONFIDENCE BOOSTER</span>
           </div>
           <div className="text-[11px] text-gray-300 flex items-center gap-2">
-            <span>STATUS:</span>
+            <span className="text-gray-400">STATUS:</span>
             <span
               className={`font-bold ${
-                metrics.statusText.includes('DETECTED')
-                  ? 'text-cyber-pink animate-pulse text-xs'
-                  : metrics.statusText.includes('DETECTING')
-                  ? 'text-yellow-400'
+                metrics.statusText.includes('TRIGGERED')
+                  ? 'text-cyber-pink animate-bounce text-xs'
+                  : isLockingIn
+                  ? 'text-amber-400 animate-pulse text-xs'
                   : metrics.statusText.includes('EXPRESSION')
                   ? 'text-cyan-400'
                   : 'text-cyber-green'
@@ -191,58 +202,55 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             <span>ROLL: {face.roll.toFixed(1)}°</span>
           </div>
           {metrics.detectedExpression && (
-            <div className="mt-0.5 inline-flex items-center gap-1.5 text-[10px] font-bold text-cyber-cyan bg-cyan-950/60 border border-cyan-500/40 px-1.5 py-0.5 rounded w-fit animate-pulse">
+            <div className="mt-0.5 inline-flex items-center gap-1.5 text-[10px] font-bold text-cyber-cyan bg-cyan-950/70 border border-cyan-500/50 px-2 py-0.5 rounded w-fit animate-pulse">
               <Zap className="w-3 h-3 text-cyan-400" />
               <span>{metrics.detectedExpression}</span>
             </div>
           )}
         </div>
 
-        {/* Right Broadcasting & Audio Gauge & Matched Meme Card */}
+        {/* Center / Right: Live AI Meme Brain HUD Card */}
         <div className="flex flex-col items-end gap-2 pointer-events-auto">
-          <div className="flex items-center gap-2 bg-[#070b12]/80 border border-cyber-green/40 px-3 py-1.5 rounded backdrop-blur-sm">
+          {/* Broadcasting Badge & Mic Level */}
+          <div className="flex items-center gap-2 bg-[#070b12]/90 border border-cyber-green/40 px-3 py-1 rounded backdrop-blur-sm">
             <span
               className={`w-2 h-2 rounded-full ${
                 isBroadcasting ? 'bg-cyber-green animate-pulse' : 'bg-gray-500'
               }`}
             />
-            <span className="text-xs font-bold text-cyber-green">
+            <span className="text-[11px] font-bold text-cyber-green">
               {isBroadcasting ? 'CABLE BROADCAST: LIVE' : 'BROADCAST: STANDBY'}
             </span>
-          </div>
-
-          {/* Audio Visualizer Bar */}
-          {isBroadcasting && (
-            <div className="flex items-center gap-1 bg-black/60 px-2 py-1 rounded border border-cyber-green/30 w-36">
-              <span className="text-[9px] text-cyber-green">MIC:</span>
-              <div className="flex-1 h-1.5 bg-gray-800 rounded overflow-hidden">
+            {isBroadcasting && (
+              <div className="w-16 h-1.5 bg-gray-800 rounded overflow-hidden ml-1">
                 <div
                   className="h-full bg-cyber-green transition-all duration-75"
                   style={{ width: `${Math.min(100, Math.round(audioLevel * 100))}%` }}
                 />
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Matched Meme Card with "jumin and jumout" Zoom In/Out Animation */}
-          {showMemeCard && matchedMeme && (
+          {/* DOCKED AI MEME BRAIN WIDGET */}
+          {showMemeCard && (
             <div
-              className={`relative bg-[#070b12]/95 border-2 border-cyan-400/90 rounded-lg p-2.5 shadow-2xl shadow-cyan-500/30 transition-all duration-300 ${
-                isZoomExpanded ? 'scale-110 ring-2 ring-cyan-300' : 'hover:scale-105'
-              } animate-jumin-jumout cursor-pointer select-none`}
+              className={`relative bg-[#070b12]/95 border-2 border-cyan-400/90 rounded-xl p-2.5 shadow-2xl shadow-cyan-500/30 transition-all duration-300 ${
+                isZoomExpanded ? 'scale-110 ring-4 ring-cyan-400/50' : 'hover:scale-105'
+              } animate-jumin-jumout cursor-pointer select-none max-w-[320px]`}
               onClick={() => setIsZoomExpanded((prev) => !prev)}
               title="Click to Zoom In / Zoom Out meme preview"
             >
               <div className="flex items-center gap-3">
-                <div className="relative overflow-hidden rounded border border-cyan-400/80 bg-black/50">
+                {/* Meme Photo with Zoom Pulse */}
+                <div className="relative overflow-hidden rounded-lg border-2 border-cyan-400/80 bg-black/60 shadow-md shadow-cyan-400/20 shrink-0">
                   <img
-                    src={matchedMeme.image}
-                    alt={matchedMeme.name}
+                    src={displayMeme.image}
+                    alt={displayMeme.name}
                     className={`object-cover transition-all duration-500 ${
-                      isZoomExpanded ? 'w-24 h-24 scale-110' : 'w-14 h-14'
+                      isZoomExpanded ? 'w-28 h-28 scale-110' : 'w-16 h-16 scale-100'
                     }`}
                   />
-                  <div className="absolute top-0 right-0 p-0.5 bg-black/70 rounded-bl text-cyan-300">
+                  <div className="absolute top-0 right-0 p-0.5 bg-black/80 rounded-bl text-cyan-300">
                     {isZoomExpanded ? (
                       <Minimize2 className="w-3 h-3" />
                     ) : (
@@ -251,31 +259,38 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-col min-w-[120px]">
+                <div className="flex flex-col min-w-[140px] flex-1">
                   <div className="flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" />
-                    <span className="text-[10px] text-cyan-400/90 font-bold uppercase tracking-wide">
-                      MEME MATCH
+                    <Brain className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                    <span className="text-[10px] text-cyan-400 font-bold tracking-wider">
+                      AI MEME BRAIN
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-white leading-tight max-w-[150px] truncate">
-                    {matchedMeme.name}
+
+                  <span className="text-xs font-bold text-white leading-tight truncate mt-0.5">
+                    {displayMeme.name}
                   </span>
 
-                  {/* Similarity score bar */}
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden border border-cyan-900">
+                  {/* AI Live Thought Line */}
+                  <div className="text-[9px] text-amber-300/90 font-mono italic truncate mt-0.5 bg-black/50 px-1 py-0.5 rounded border border-amber-500/30">
+                    {aiThought || 'AI: SELECTING BEST MEME & MUSIC...'}
+                  </div>
+
+                  {/* Match Confidence Bar */}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className="flex-1 h-2 bg-gray-900 rounded-full overflow-hidden border border-cyan-800">
                       <div
                         className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-200"
-                        style={{ width: `${matchedMeme.percentage}%` }}
+                        style={{ width: `${displayMeme.percentage}%` }}
                       />
                     </div>
                     <span className="text-[11px] text-cyan-300 font-bold">
-                      {matchedMeme.percentage}%
+                      {displayMeme.percentage}%
                     </span>
                   </div>
-                  <span className="text-[8px] text-cyan-400/60 mt-0.5 text-right font-sans">
-                    JUMIN & JUMOUT // ACTIVE
+
+                  <span className="text-[8px] text-cyan-400/70 mt-0.5 font-sans text-right">
+                    JUMIN & JUMOUT ACTIVE
                   </span>
                 </div>
               </div>
@@ -284,81 +299,92 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
         </div>
       </div>
 
+      {/* Center Screen: Expression Lock-In Banner (When user holds face expression) */}
+      {isLockingIn && (
+        <div className="self-center flex flex-col items-center gap-1.5 bg-black/85 border-2 border-amber-400 px-5 py-2.5 rounded-xl backdrop-blur-md shadow-2xl shadow-amber-400/40 animate-pulse pointer-events-none">
+          <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+            <Activity className="w-4 h-4 text-amber-400 animate-spin" />
+            <span>AI LOCKING IN EDIT TRIGGER...</span>
+          </div>
+          <span className="text-xs text-white font-mono">{metrics.statusText}</span>
+        </div>
+      )}
+
       {/* Middle Screen Multi-Factor Detection Gauges */}
       <div className="flex justify-between items-center w-full px-2">
         {/* Left Side: Drink Sip & Smile/Laugh Gauges */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 pointer-events-auto">
           {/* Drink Progress Gauge */}
-          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyber-green/30 backdrop-blur-xs">
-            <span className="text-[8px] text-cyber-green/80 font-bold">DRINK</span>
-            <div className="w-2.5 h-20 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
+          <div className="flex flex-col items-center gap-1 bg-[#060a10]/85 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm shadow-md">
+            <span className="text-[9px] text-emerald-400 font-bold">DRINK</span>
+            <div className="w-3 h-24 bg-gray-950 border border-emerald-500/50 rounded flex flex-col justify-end p-0.5">
               <div
-                className={`w-full transition-all duration-100 rounded-sm ${
-                  metrics.drinkScore > 0.75
+                className={`w-full transition-all duration-100 rounded-xs ${
+                  metrics.drinkScore > 0.65
                     ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
-                    : 'bg-cyber-green'
+                    : 'bg-emerald-400 shadow-sm shadow-emerald-400'
                 }`}
                 style={{ height: `${Math.min(100, Math.round(metrics.drinkScore * 100))}%` }}
               />
             </div>
-            <span className="text-[9px] text-gray-300">
+            <span className="text-[10px] text-emerald-300 font-bold">
               {Math.round(metrics.drinkScore * 100)}%
             </span>
           </div>
 
           {/* Smile / Laugh Gauge */}
-          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-amber-400/30 backdrop-blur-xs">
-            <span className="text-[8px] text-amber-400/90 font-bold">SMILE</span>
-            <div className="w-2.5 h-20 bg-gray-900 border border-amber-400/40 rounded flex flex-col justify-end p-0.5">
+          <div className="flex flex-col items-center gap-1 bg-[#060a10]/85 p-2 rounded-lg border border-amber-400/50 backdrop-blur-sm shadow-md">
+            <span className="text-[9px] text-amber-400 font-bold">SMILE</span>
+            <div className="w-3 h-24 bg-gray-950 border border-amber-400/50 rounded flex flex-col justify-end p-0.5">
               <div
-                className={`w-full transition-all duration-100 rounded-sm ${
-                  metrics.smileScore > 0.70
+                className={`w-full transition-all duration-100 rounded-xs ${
+                  metrics.smileScore > 0.65
                     ? 'bg-amber-400 shadow-md shadow-amber-400'
-                    : 'bg-amber-500/70'
+                    : 'bg-gradient-to-t from-amber-600 to-amber-400'
                 }`}
                 style={{ height: `${Math.min(100, Math.round(metrics.smileScore * 100))}%` }}
               />
             </div>
-            <span className="text-[9px] text-gray-300">
+            <span className="text-[10px] text-amber-300 font-bold">
               {Math.round(metrics.smileScore * 100)}%
             </span>
           </div>
         </div>
 
         {/* Right Side: Glasses & Batman Sigma Gauges */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 pointer-events-auto">
           {/* Batman Sigma Face Gauge */}
-          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyan-400/30 backdrop-blur-xs">
-            <span className="text-[8px] text-cyan-400/90 font-bold">SIGMA</span>
-            <div className="w-2.5 h-20 bg-gray-900 border border-cyan-400/40 rounded flex flex-col justify-end p-0.5">
+          <div className="flex flex-col items-center gap-1 bg-[#060a10]/85 p-2 rounded-lg border border-cyan-400/60 backdrop-blur-sm shadow-md shadow-cyan-500/20">
+            <span className="text-[9px] text-cyan-400 font-bold">SIGMA</span>
+            <div className="w-3 h-24 bg-gray-950 border border-cyan-400/60 rounded flex flex-col justify-end p-0.5">
               <div
-                className={`w-full transition-all duration-100 rounded-sm ${
+                className={`w-full transition-all duration-100 rounded-xs ${
                   metrics.sigmaScore > 0.65
-                    ? 'bg-cyan-400 shadow-md shadow-cyan-400'
-                    : 'bg-cyan-600/70'
+                    ? 'bg-cyan-300 shadow-lg shadow-cyan-400'
+                    : 'bg-gradient-to-t from-blue-600 to-cyan-400'
                 }`}
                 style={{ height: `${Math.min(100, Math.round(metrics.sigmaScore * 100))}%` }}
               />
             </div>
-            <span className="text-[9px] text-gray-300">
+            <span className="text-[10px] text-cyan-300 font-bold">
               {Math.round(metrics.sigmaScore * 100)}%
             </span>
           </div>
 
           {/* Glasses Adjust Gauge */}
-          <div className="flex flex-col items-center gap-1 bg-black/60 p-2 rounded border border-cyber-green/30 backdrop-blur-xs">
-            <span className="text-[8px] text-cyber-green/80 font-bold">GLASSES</span>
-            <div className="w-2.5 h-20 bg-gray-900 border border-cyber-green/40 rounded flex flex-col justify-end p-0.5">
+          <div className="flex flex-col items-center gap-1 bg-[#060a10]/85 p-2 rounded-lg border border-emerald-500/40 backdrop-blur-sm shadow-md">
+            <span className="text-[9px] text-emerald-400 font-bold">GLASSES</span>
+            <div className="w-3 h-24 bg-gray-950 border border-emerald-500/50 rounded flex flex-col justify-end p-0.5">
               <div
-                className={`w-full transition-all duration-100 rounded-sm ${
-                  metrics.glassesScore > 0.75
+                className={`w-full transition-all duration-100 rounded-xs ${
+                  metrics.glassesScore > 0.65
                     ? 'bg-cyber-pink shadow-md shadow-cyber-pink'
-                    : 'bg-cyber-green'
+                    : 'bg-emerald-400 shadow-sm shadow-emerald-400'
                 }`}
                 style={{ height: `${Math.min(100, Math.round(metrics.glassesScore * 100))}%` }}
               />
             </div>
-            <span className="text-[9px] text-gray-300">
+            <span className="text-[10px] text-emerald-300 font-bold">
               {Math.round(metrics.glassesScore * 100)}%
             </span>
           </div>

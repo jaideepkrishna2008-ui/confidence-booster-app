@@ -8,7 +8,7 @@ class GestureDetector {
   private isLoaded: boolean = false;
   private isLoading: boolean = false;
   private lastTriggerTime: number = 0;
-  private triggerCooldownMs: number = 4000;
+  private triggerCooldownMs: number = 4500;
   private sensitivity: number = 1;
   private downscaleCanvas: HTMLCanvasElement | null = null;
   private downscaleCtx: CanvasRenderingContext2D | null = null;
@@ -21,6 +21,11 @@ class GestureDetector {
   private lastRoll: number = 0;
   private lastDetectTimestamp: number = 0;
   private smoothedMotion: number = 0;
+
+  // Anti-jitter & Debounce: Expression must be held for 350ms before triggering
+  private expressionHoldMs: number = 0;
+  private candidateAction: 'expression' | 'crazy' | 'drink' | 'glasses' | null = null;
+  private candidateLabel: string = '';
 
   async initialize(): Promise<void> {
     if (this.isLoaded || this.isLoading) return;
@@ -150,7 +155,7 @@ class GestureDetector {
 
     let faceFeatures: Record<string, number> | undefined = undefined;
 
-    // Expression & geometry variables
+    // Metric variables
     let smileScore = 0;
     let mouthOpenness = 0;
     let surpriseScore = 0;
@@ -208,38 +213,48 @@ class GestureDetector {
           face.leftEye = { x: leftEyeOuter.x, y: leftEyeOuter.y };
           face.rightEye = { x: rightEyeOuter.x, y: rightEyeOuter.y };
 
-          const faceHeight = Math.max(0.01, Math.hypot(bottomChin.x - topForehead.x, bottomChin.y - topForehead.y));
-          const noseRelY = (noseTip.y - topForehead.y) / faceHeight;
-          face.pitch = (0.5 - noseRelY) * 90;
+          // Inter-Ocular Reference Distance (IOD): Stable, scale-invariant reference
+          const eyeDist = Math.max(0.035, Math.hypot(rightEyeOuter.x - leftEyeOuter.x, rightEyeOuter.y - leftEyeOuter.y));
+
+          // Pitch, Yaw, Roll
+          const noseRelY = (noseTip.y - noseBridge.y) / eyeDist;
+          face.pitch = (0.55 - noseRelY) * 60;
 
           const eyeCenterX = (leftEyeOuter.x + rightEyeOuter.x) / 2;
-          face.yaw = (noseTip.x - eyeCenterX) * 120;
+          face.yaw = ((noseTip.x - eyeCenterX) / eyeDist) * 80;
 
           const dy = rightEyeOuter.y - leftEyeOuter.y;
           const dx = rightEyeOuter.x - leftEyeOuter.x;
           face.roll = Math.atan2(dy, dx) * (180 / Math.PI);
 
           // -------------------------------------------------------------
-          // Advanced Facial Feature Extraction from 468 MediaPipe Points
+          // Advanced Geometric Feature Extraction (Normalized by eyeDist)
           // -------------------------------------------------------------
-          // Mouth geometry: left corner = 61, right corner = 291
+          // 1. Mouth Geometry (corners: 61, 291)
           const mouthLeftCorner = lms[61] || leftEyeOuter;
           const mouthRightCorner = lms[291] || rightEyeOuter;
           const mouthW = Math.hypot(mouthRightCorner.x - mouthLeftCorner.x, mouthRightCorner.y - mouthLeftCorner.y);
           const mouthH = Math.hypot(lowerLip.x - upperLip.x, lowerLip.y - upperLip.y);
 
-          mouthWidthRatio = Math.min(1, Math.max(0.1, mouthW / (faceHeight * 0.72)));
-          mouthOpenness = Math.min(1, Math.max(0, mouthH / (faceHeight * 0.40)));
+          // Ratios normalized by inter-ocular distance:
+          // Neutral mouth width / eyeDist is ~0.76 - 0.84. Smiling expands to 1.05 - 1.35!
+          const widthRatio = mouthW / eyeDist;
+          const openRatio = mouthH / eyeDist;
 
-          // Smile & mouth corner lift
-          const lipCornersAvgY = (mouthLeftCorner.y + mouthRightCorner.y) / 2;
-          const lipCenterY = (upperLip.y + lowerLip.y) / 2;
-          mouthElevation = (lipCenterY - lipCornersAvgY) / faceHeight;
+          mouthWidthRatio = Math.min(1, Math.max(0, (widthRatio - 0.5) / 0.8));
+          mouthOpenness = Math.min(1, Math.max(0, (openRatio - 0.05) * 4.0));
 
-          // Smile formula (mouth width expansion + lip corners lifting upward)
-          smileScore = Math.min(1, Math.max(0, (mouthWidthRatio - 0.46) * 2.5 + mouthElevation * 4.0));
+          // Corner elevation relative to lip center (positive when corners lift up in smile)
+          const cornersAvgY = (mouthLeftCorner.y + mouthRightCorner.y) / 2;
+          const centerLipY = (upperLip.y + lowerLip.y) / 2;
+          mouthElevation = (centerLipY - cornersAvgY) / eyeDist;
 
-          // Eyelid Aperture & EAR: Left (top 159, btm 145, out 33, in 133), Right (top 386, btm 374, out 263, in 362)
+          // Smile Score: Smooth analog response. Resting face = 0-10%, slight grin = 30-50%, full smile = 75-100%
+          const smileWidthExpansion = Math.max(0, widthRatio - 0.76);
+          const smileCornerLift = Math.max(0, mouthElevation);
+          smileScore = Math.min(1, Math.max(0, (smileWidthExpansion * 2.8 + smileCornerLift * 5.0) * this.sensitivity));
+
+          // 2. Eye Aspect Ratio & Eyelid Aperture
           const leftEyeTop = lms[159] || leftEyeOuter;
           const leftEyeBtm = lms[145] || leftEyeOuter;
           const leftEyeIn = lms[133] || leftEyeOuter;
@@ -257,36 +272,44 @@ class GestureDetector {
           eyeOpenness = Math.min(1, Math.max(0.05, (leftEAR + rightEAR) / 2));
           eyesSymmetry = Math.min(1, Math.abs(leftEAR - rightEAR));
 
-          // Eyebrow Elevation: Left brow 70 to eye 159, Right brow 300 to eye 386
+          // 3. Eyebrow Elevation (70, 300)
           const leftBrow = lms[70] || topForehead;
           const rightBrow = lms[300] || topForehead;
-          const leftBrowH = Math.hypot(leftBrow.x - leftEyeTop.x, leftBrow.y - leftEyeTop.y) / faceHeight;
-          const rightBrowH = Math.hypot(rightBrow.x - rightEyeTop.x, rightBrow.y - rightEyeTop.y) / faceHeight;
+          const leftBrowDist = Math.hypot(leftBrow.x - leftEyeTop.x, leftBrow.y - leftEyeTop.y) / eyeDist;
+          const rightBrowDist = Math.hypot(rightBrow.x - rightEyeTop.x, rightBrow.y - rightEyeTop.y) / eyeDist;
 
-          eyebrowHeight = Math.min(1, Math.max(0.02, (leftBrowH + rightBrowH) / 2));
-          browSymmetry = Math.min(1, Math.abs(leftBrowH - rightBrowH));
+          eyebrowHeight = Math.min(1, Math.max(0.02, (leftBrowDist + rightBrowDist) / 2));
+          browSymmetry = Math.min(1, Math.abs(leftBrowDist - rightBrowDist));
 
-          // Surprise score (wide open eyes + raised eyebrows)
-          surpriseScore = Math.min(1, Math.max(0, (eyebrowHeight - 0.12) * 4.5 + (eyeOpenness - 0.28) * 3.0));
+          // Surprise score (raised eyebrows + open eyes)
+          const browLift = Math.max(0, eyebrowHeight - 0.28);
+          surpriseScore = Math.min(1, Math.max(0, browLift * 4.0 + (eyeOpenness > 0.28 ? (eyeOpenness - 0.28) * 3.0 : 0)));
 
-          // Patrick Bateman Sigma face score (Christian Bale squint + knowing smirk / pout + confident brow)
-          const squintFactor = Math.max(0, (0.24 - eyeOpenness) * 3.5);
-          const smirkFactor = Math.max(0, mouthElevation * 3.5 + (mouthWidthRatio < 0.45 ? 0.35 : 0));
-          const asymmetricBrowFactor = Math.min(0.4, browSymmetry * 5.0);
-          sigmaScore = Math.min(1, Math.max(0, squintFactor * 0.45 + smirkFactor * 0.40 + asymmetricBrowFactor));
+          // 4. Christian Bale / Batman Sigma Face calculation:
+          // Signature components:
+          // a) Squinted eyes (EAR narrows from ~0.24 down to 0.12 - 0.17)
+          const squintComponent = Math.min(1, Math.max(0, (0.23 - eyeOpenness) / 0.13));
+          // b) Asymmetrical mouth smirk or compressed pout
+          const mouthAsymmetry = Math.abs(mouthLeftCorner.y - mouthRightCorner.y) / eyeDist;
+          const smirkComponent = Math.min(1, mouthAsymmetry * 6.5);
+          const poutComponent = widthRatio < 0.74 && openRatio > 0.07 && openRatio < 0.22 ? 0.35 : 0;
+          // c) Head angle confidence tilt
+          const tiltComponent = (Math.abs(face.yaw) > 6 || Math.abs(face.roll) > 5) ? 0.18 : 0;
 
-          // Crazy Head Motion / Shake / Tilt tracking
+          sigmaScore = Math.min(1, Math.max(0, (squintComponent * 0.45 + smirkComponent * 0.40 + poutComponent + tiltComponent) * this.sensitivity));
+
+          // 5. Smooth Motion Tracking (EMA filtered, immune to single-frame glitch)
           if (this.lastDetectTimestamp > 0) {
-            const dt = Math.max(16, timestamp - this.lastDetectTimestamp) / 1000;
-            const deltaPitch = Math.abs(face.pitch - this.lastPitch) / dt;
-            const deltaYaw = Math.abs(face.yaw - this.lastYaw) / dt;
-            const deltaRoll = Math.abs(face.roll - this.lastRoll) / dt;
-            const totalVelocity = Math.hypot(deltaPitch, deltaYaw, deltaRoll);
+            const dt = Math.max(20, Math.min(250, timestamp - this.lastDetectTimestamp)) / 1000;
+            const deltaPitch = Math.abs(face.pitch - this.lastPitch);
+            const deltaYaw = Math.abs(face.yaw - this.lastYaw);
+            const deltaRoll = Math.abs(face.roll - this.lastRoll);
+            const rawVelocity = (deltaPitch + deltaYaw + deltaRoll * 0.8) / dt;
 
-            // Roll extreme tilt or wild head shake
-            const tiltBonus = Math.abs(face.roll) > 28 ? 0.45 : 0;
-            const motionInstant = Math.min(1, (totalVelocity / 220) * this.sensitivity + tiltBonus);
-            this.smoothedMotion = this.smoothedMotion * 0.55 + motionInstant * 0.45;
+            // Damped velocity (ignoring micro-tremors < 35 deg/s)
+            const clampedVel = Math.max(0, rawVelocity - 35);
+            const instantMotion = Math.min(1, (clampedVel / 180) * this.sensitivity);
+            this.smoothedMotion = this.smoothedMotion * 0.7 + instantMotion * 0.3;
           }
           crazyScore = Math.min(1, this.smoothedMotion);
 
@@ -298,14 +321,8 @@ class GestureDetector {
       } catch {}
     }
 
-    // Hand tracking for drinks / glasses
-    const needHands =
-      triggerMode === 'all' ||
-      triggerMode === 'glasses' ||
-      triggerMode === 'both' ||
-      (triggerMode === 'drink' && face.pitch > 4);
-
-    if (this.handLandmarker && face.detected && needHands) {
+    // Hand tracking for drinks / glasses adjust
+    if (this.handLandmarker && face.detected) {
       try {
         const handRes = this.handLandmarker.detectForVideo(inputCanvas, timestamp);
         if (handRes.landmarks && handRes.landmarks.length > 0) {
@@ -318,8 +335,8 @@ class GestureDetector {
               hands.points.push({
                 x: pt.x,
                 y: pt.y,
-                isNearMouth: distToMouth < 0.18,
-                isNearEyes: distToEyes < 0.15,
+                isNearMouth: distToMouth < 0.20,
+                isNearEyes: distToEyes < 0.18,
               });
             }
           }
@@ -327,138 +344,148 @@ class GestureDetector {
       } catch {}
     }
 
-    // Detection Scores
-    let triggeredAction: 'drink' | 'glasses' | 'expression' | 'crazy' | null = null;
-    let detectedExprLabel: string | null = null;
+    // Metric Calculations
+    const isHandMouth = hands.points.some((p) => p.isNearMouth);
+    const isHandEyes = hands.points.some((p) => p.isNearEyes);
+
+    // Drink Score: Analog rise with head pitch and hand
+    let drinkScore = 0;
+    if (face.pitch > 3) {
+      const pitchNorm = Math.min(1, (face.pitch / 22) * this.sensitivity);
+      drinkScore = Math.min(1, pitchNorm * 0.65 + (isHandMouth ? 0.45 : 0));
+    } else if (isHandMouth) {
+      drinkScore = 0.35 * this.sensitivity;
+    }
+    metrics.drinkScore = drinkScore;
+
+    // Glasses Score: Smooth analog response
+    let glassesScore = 0;
+    if (isHandEyes) {
+      glassesScore = Math.min(1, 0.90 * this.sensitivity);
+    }
+    metrics.glassesScore = glassesScore;
+
+    // Store expressions in metrics
+    metrics.smileScore = smileScore;
+    metrics.mouthOpenness = mouthOpenness;
+    metrics.surpriseScore = surpriseScore;
+    metrics.sigmaScore = sigmaScore;
+    metrics.crazyScore = crazyScore;
+
+    // Feature profile map for MemeMatcher & AI Brain
+    faceFeatures = {
+      surprise_score: surpriseScore,
+      smile_score: smileScore,
+      concern_score: Math.min(1, Math.max(0, (0.28 - eyebrowHeight) * 2.5)),
+      cheers_score: drinkScore,
+      hand_raised: hands.detected ? 1 : 0,
+      num_hands: hands.points.length > 0 ? 1 : 0,
+      eye_openness: eyeOpenness,
+      eyes_symmetry: eyesSymmetry,
+      mouth_openness: mouthOpenness,
+      mouth_width_ratio: mouthWidthRatio,
+      mouth_elevation: mouthElevation,
+      eyebrow_height: eyebrowHeight,
+      brow_symmetry: browSymmetry,
+      sigma_score: sigmaScore,
+    };
+
+    // Determine current expression candidate
+    let instantCandidate: 'expression' | 'crazy' | 'drink' | 'glasses' | null = null;
+    let exprLabel: string | null = null;
+
+    const isLaughing = smileScore > 0.58 && mouthOpenness > 0.22;
+    const isSigmaFace = sigmaScore > 0.52;
+    const isJawDrop = mouthOpenness > 0.40;
+    const isEyebrowRaise = surpriseScore > 0.55 || browSymmetry > 0.08;
+    const isCrazyMotion = crazyScore > 0.65;
+    const isDrinkSip = (drinkScore > 0.60 && isHandMouth) || face.pitch > 24 / this.sensitivity;
+    const isGlassesAdjust = glassesScore > 0.60 && isHandEyes;
+
+    if (isLaughing) {
+      instantCandidate = 'expression';
+      exprLabel = 'LAUGHING (MOGGED!)';
+    } else if (isSigmaFace) {
+      instantCandidate = 'expression';
+      exprLabel = 'BATMAN SIGMA FACE';
+    } else if (isJawDrop) {
+      instantCandidate = 'expression';
+      exprLabel = 'JAW DROP / SCREAM';
+    } else if (isEyebrowRaise) {
+      instantCandidate = 'expression';
+      exprLabel = 'THE ROCK EYEBROW';
+    } else if (isCrazyMotion) {
+      instantCandidate = 'crazy';
+      exprLabel = 'CRAZY HEAD MOTION';
+    } else if (isDrinkSip) {
+      instantCandidate = 'drink';
+      exprLabel = 'DRINK SIP';
+    } else if (isGlassesAdjust) {
+      instantCandidate = 'glasses';
+      exprLabel = 'GLASSES ADJUST';
+    }
+
+    metrics.detectedExpression = exprLabel;
+
+    // -------------------------------------------------------------
+    // Anti-Jitter & Debounce Accumulator (350ms sustained hold)
+    // -------------------------------------------------------------
     const now = performance.now();
+    const dt = this.lastTriggerTime > 0 ? Math.min(100, now - (this.lastDetectTimestamp || now)) : 33;
     const canTrigger = now - this.lastTriggerTime > this.triggerCooldownMs;
 
-    if (face.detected) {
-      const isPitchSip = face.pitch > 11 / this.sensitivity;
-      const isHandMouth = hands.points.some((p) => p.isNearMouth);
-      const isHandEyes = hands.points.some((p) => p.isNearEyes);
+    let triggeredAction: 'drink' | 'glasses' | 'expression' | 'crazy' | null = null;
 
-      // Drink score
-      let drinkScore = 0;
-      if (face.pitch > 0) {
-        drinkScore = Math.min(1, (face.pitch / 25) * this.sensitivity);
-        if (isHandMouth) drinkScore = Math.min(1, drinkScore + 0.45);
-      }
-      metrics.drinkScore = drinkScore;
+    if (canTrigger && instantCandidate) {
+      // Check mode compatibility
+      let isModeAllowed = false;
+      if (triggerMode === 'all') isModeAllowed = true;
+      else if (triggerMode === 'expression' && instantCandidate === 'expression') isModeAllowed = true;
+      else if (triggerMode === 'crazy' && (instantCandidate === 'crazy' || instantCandidate === 'expression')) isModeAllowed = true;
+      else if (triggerMode === 'both' && (instantCandidate === 'drink' || instantCandidate === 'glasses')) isModeAllowed = true;
+      else if (triggerMode === 'drink' && instantCandidate === 'drink') isModeAllowed = true;
+      else if (triggerMode === 'glasses' && instantCandidate === 'glasses') isModeAllowed = true;
 
-      // Glasses score
-      let glassesScore = 0;
-      if (isHandEyes) {
-        glassesScore = Math.min(1, 0.85 * this.sensitivity);
-      }
-      metrics.glassesScore = glassesScore;
-
-      // Expression scores
-      metrics.smileScore = smileScore;
-      metrics.mouthOpenness = mouthOpenness;
-      metrics.surpriseScore = surpriseScore;
-      metrics.sigmaScore = sigmaScore;
-      metrics.crazyScore = crazyScore;
-
-      // Build realistic user features map for MemeMatcher
-      faceFeatures = {
-        surprise_score: surpriseScore,
-        smile_score: smileScore,
-        concern_score: Math.min(1, Math.max(0, (0.08 - eyebrowHeight) * 3 + (mouthElevation < 0 ? 0.3 : 0))),
-        cheers_score: drinkScore * (hands.detected ? 1 : 0.3),
-        hand_raised: hands.detected ? 1 : 0,
-        num_hands: hands.points.length > 0 ? 1 : 0,
-        eye_openness: eyeOpenness,
-        eyes_symmetry: eyesSymmetry,
-        mouth_openness: mouthOpenness,
-        mouth_width_ratio: mouthWidthRatio,
-        mouth_elevation: mouthElevation,
-        eyebrow_height: eyebrowHeight,
-        brow_symmetry: browSymmetry,
-        sigma_score: sigmaScore,
-      };
-
-      // Specific Expression Recognitions
-      const isLaughing = smileScore > 0.62 && mouthOpenness > 0.28;
-      const isJawDrop = mouthOpenness > 0.48;
-      const isSigmaFace = sigmaScore > 0.65;
-      const isEyebrowRaise = eyebrowHeight > 0.20 || browSymmetry > 0.05;
-      const isCrazyEvent = crazyScore > 0.65;
-
-      if (isLaughing) detectedExprLabel = 'LAUGHING (MOGGED!)';
-      else if (isSigmaFace) detectedExprLabel = 'BATMAN SIGMA FACE';
-      else if (isJawDrop) detectedExprLabel = 'JAW DROP / SCREAM';
-      else if (isEyebrowRaise) detectedExprLabel = 'THE ROCK EYEBROW';
-      else if (isCrazyEvent) detectedExprLabel = 'CRAZY HEAD MOTION';
-
-      metrics.detectedExpression = detectedExprLabel;
-
-      // Check Auto-Trigger conditions
-      if (canTrigger) {
-        // 1. ALL mode (Triggers on ANY event: Expression, Drink, Glasses, Crazy!)
-        if (triggerMode === 'all') {
-          if ((isPitchSip && isHandMouth) || face.pitch > 22 / this.sensitivity) {
-            triggeredAction = 'drink';
-          } else if (isHandEyes) {
-            triggeredAction = 'glasses';
-          } else if (isLaughing || isSigmaFace || isJawDrop || isEyebrowRaise) {
-            triggeredAction = 'expression';
-          } else if (isCrazyEvent) {
-            triggeredAction = 'crazy';
-          }
-        }
-        // 2. EXPRESSION mode (No glasses or drink required!)
-        else if (triggerMode === 'expression') {
-          if (isLaughing || isSigmaFace || isJawDrop || isEyebrowRaise) {
-            triggeredAction = 'expression';
-          }
-        }
-        // 3. CRAZY mode (Fast head motion, intense shakes, crazy faces)
-        else if (triggerMode === 'crazy') {
-          if (isCrazyEvent || isJawDrop) {
-            triggeredAction = 'crazy';
-          }
-        }
-        // 4. BOTH (Drink or Glasses)
-        else if (triggerMode === 'both') {
-          if ((isPitchSip && isHandMouth) || face.pitch > 22 / this.sensitivity) {
-            triggeredAction = 'drink';
-          } else if (isHandEyes) {
-            triggeredAction = 'glasses';
-          }
-        }
-        // 5. DRINK ONLY
-        else if (triggerMode === 'drink') {
-          if ((isPitchSip && isHandMouth) || face.pitch > 22 / this.sensitivity) {
-            triggeredAction = 'drink';
-          }
-        }
-        // 6. GLASSES ONLY
-        else if (triggerMode === 'glasses') {
-          if (isHandEyes) {
-            triggeredAction = 'glasses';
-          }
+      if (isModeAllowed) {
+        if (this.candidateAction === instantCandidate) {
+          this.expressionHoldMs += 40; // Increment hold time
+        } else {
+          this.candidateAction = instantCandidate;
+          this.candidateLabel = exprLabel || '';
+          this.expressionHoldMs = 40;
         }
 
-        if (triggeredAction) {
+        // Must sustain for at least 320ms to trigger (filters out all webcam jitter!)
+        if (this.expressionHoldMs >= 320) {
+          triggeredAction = instantCandidate;
           this.lastTriggerTime = now;
+          this.expressionHoldMs = 0;
+          this.candidateAction = null;
         }
-      }
-
-      // HUD Status Readout Text
-      if (triggeredAction) {
-        metrics.statusText = `ACTION DETECTED: ${
-          detectedExprLabel ? detectedExprLabel : triggeredAction.toUpperCase()
-        }`;
-      } else if (detectedExprLabel) {
-        metrics.statusText = `EXPRESSION: ${detectedExprLabel}`;
-      } else if (isPitchSip || isHandMouth) {
-        metrics.statusText = 'TRIGGER: DRINK SIP DETECTING...';
-      } else if (isHandEyes) {
-        metrics.statusText = 'TRIGGER: GLASSES ADJUST DETECTING...';
       } else {
-        metrics.statusText = 'SUBJECT: LOCKED // WAITING...';
+        this.expressionHoldMs = 0;
+        this.candidateAction = null;
       }
+    } else {
+      // Decay accumulator smoothly if expression released
+      this.expressionHoldMs = Math.max(0, this.expressionHoldMs - 50);
+      if (this.expressionHoldMs === 0) {
+        this.candidateAction = null;
+      }
+    }
+
+    // Status Text
+    if (triggeredAction) {
+      metrics.statusText = `ACTION TRIGGERED: ${exprLabel || triggeredAction.toUpperCase()}!`;
+    } else if (this.expressionHoldMs > 60 && this.candidateLabel) {
+      const holdPct = Math.min(100, Math.round((this.expressionHoldMs / 320) * 100));
+      metrics.statusText = `LOCKING IN: ${this.candidateLabel} (${holdPct}%)`;
+    } else if (exprLabel) {
+      metrics.statusText = `EXPRESSION: ${exprLabel}`;
+    } else if (face.detected) {
+      metrics.statusText = 'SUBJECT: LOCKED // WAITING FOR EXPRESSION...';
+    } else {
+      metrics.statusText = 'SEARCHING FOR SUBJECT...';
     }
 
     return { face, hands, metrics, faceFeatures, triggeredAction };
@@ -466,6 +493,8 @@ class GestureDetector {
 
   resetCooldown(): void {
     this.lastTriggerTime = performance.now();
+    this.expressionHoldMs = 0;
+    this.candidateAction = null;
   }
 }
 

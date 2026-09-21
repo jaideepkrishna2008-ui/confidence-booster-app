@@ -14,6 +14,8 @@ import { workerTickTimer } from './services/workerTickTimer';
 import { editRenderer } from './services/editRenderer';
 import { recorderService } from './services/recorderService';
 import { MemeMatcher, MemeInfo } from './services/memeMatcher';
+import { AiMemeBrain } from './services/aiMemeBrain';
+import { memeAssets } from './services/memeAssets';
 import { AppState, TriggerMode, EditPreset, FaceData, HandData, DetectionMetrics, TakeoverMode, FrameItem } from './types';
 
 export const App: React.FC = () => {
@@ -38,9 +40,10 @@ export const App: React.FC = () => {
   const [isSoundboardOpen, setIsSoundboardOpen] = useState(false);
   const [isObsModalOpen, setIsObsModalOpen] = useState(false);
 
-  // Meme Matcher Mode state
+  // Meme Matcher & AI Brain state
   const [isMemeMode, setIsMemeMode] = useState(true);
   const [matchedMeme, setMatchedMeme] = useState<{ name: string; percentage: number; image: string } | null>(null);
+  const [aiThought, setAiThought] = useState<string>('AI SCANNING FACIAL TOPOLOGY...');
   const matchedMemeRef = useRef<{ name: string; percentage: number; image: string } | null>(null);
 
   // Download clip state
@@ -185,6 +188,12 @@ export const App: React.FC = () => {
     };
     animId = requestAnimationFrame(pollAudio);
     return () => cancelAnimationFrame(animId);
+  }, []);
+
+  // Preload all audio tracks & meme images into memory on startup
+  useEffect(() => {
+    phonkAudio.preloadAllAudios().catch(() => {});
+    memeAssets.preloadAll();
   }, []);
 
   // Main trigger edit function (can be triggered by gesture or spacebar)
@@ -360,17 +369,29 @@ export const App: React.FC = () => {
           setHandData(result.hands);
           setMetrics(result.metrics);
 
-          // Real-time Meme matching computation using actual face landmarks
+          // Real-time AI Meme Brain Analysis using actual face landmarks
           if (isMemeMode && result.face.detected && result.faceFeatures) {
-            const match = MemeMatcher.findBestMatch(result.faceFeatures);
-            if (match.meme) {
+            const decision = AiMemeBrain.analyze(result.faceFeatures);
+            setAiThought(decision.aiThought);
+
+            if (decision.matchedMeme) {
               const matchedData = {
-                name: match.meme.name,
-                percentage: match.percentage,
-                image: match.meme.image,
+                name: decision.matchedMeme.name,
+                percentage: decision.confidence,
+                image: decision.matchedMeme.image,
               };
               matchedMemeRef.current = matchedData;
               setMatchedMeme(matchedData);
+            }
+
+            // Intelligently pair preset & music with the user's expression
+            if (decision.isFunnyFace && appStateRef.current === 'STANDBY') {
+              if (decision.recommendedTrack !== selectedTrack) {
+                setSelectedTrack(decision.recommendedTrack);
+              }
+              if (decision.recommendedPreset !== selectedPreset) {
+                handlePresetChange(decision.recommendedPreset);
+              }
             }
           }
 
@@ -593,6 +614,7 @@ export const App: React.FC = () => {
           isBroadcasting={isBroadcasting}
           audioLevel={audioLevel}
           matchedMeme={matchedMeme}
+          aiThought={aiThought}
           showMemeCard={isMemeMode}
         />
       )}

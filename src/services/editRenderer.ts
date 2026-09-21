@@ -1,5 +1,6 @@
 import { workerTickTimer } from './workerTickTimer';
 import { FrameItem } from '../types';
+import { memeAssets } from './memeAssets';
 
 export interface EditRenderOptions {
   canvas: HTMLCanvasElement;
@@ -54,7 +55,11 @@ class EditRenderer {
     duration: number = 850,
     label: string = 'BATMAN // SIGMA DROP'
   ): void {
-    const img = this.currentMemeImage || this.moggedImage;
+    const img =
+      (this.currentMemeSrc ? memeAssets.getMemeImage(this.currentMemeSrc) : null) ||
+      this.currentMemeImage ||
+      memeAssets.getMemeImage('/memes/batman_sigma_smirk.png') ||
+      this.moggedImage;
     if (!img) return;
 
     const rel = elapsed - triggerTime;

@@ -1,4 +1,5 @@
 import { broadcastAudio, SOUND_TRACKS } from './broadcastAudioEngine';
+import { TrackId } from '../types';
 
 class PhonkAudioEngine {
   private ctx: AudioContext | null = null;
@@ -140,6 +141,19 @@ class PhonkAudioEngine {
     } finally {
       this.isPreloadingMogger = false;
     }
+  }
+
+  async preloadAllAudios(): Promise<void> {
+    await Promise.allSettled([
+      this.preloadTomadaAudio(),
+      this.preloadMoggedAudio(),
+      this.preloadMoggerAudio(),
+    ]);
+  }
+
+  getRandomTrack(): TrackId {
+    const tracks: TrackId[] = ['montagem_tomada', 'marlon_mogged', 'mogger'];
+    return tracks[Math.floor(Math.random() * tracks.length)];
   }
 
   getAudioStream(): MediaStream | null {
