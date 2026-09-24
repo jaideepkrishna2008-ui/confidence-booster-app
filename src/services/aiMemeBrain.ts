@@ -117,13 +117,13 @@ export class AiMemeBrain {
   private static shockTracksBag = new ShuffleBag<TrackId>(['mogger', 'cyber_sigma', 'marlon_mogged']);
   private static toastTracksBag = new ShuffleBag<TrackId>(['montagem_tomada', 'gigachad_anthem', 'tokyo_drift']);
   private static allPresetsBag = new ShuffleBag<EditPreset>([
-    'sigma_hard_snaps', 'ghost_trail_impact', 'dark_manga_strobe', 'parallax_dual_speed',
+    'rotating_sigma_vortex', 'lightning_god_aura', 'sigma_hard_snaps', 'ghost_trail_impact', 'dark_manga_strobe', 'parallax_dual_speed',
   ]);
   private static sigmaPresetsBag = new ShuffleBag<EditPreset>([
-    'sigma_hard_snaps', 'dark_manga_strobe',
+    'rotating_sigma_vortex', 'lightning_god_aura', 'sigma_hard_snaps', 'dark_manga_strobe',
   ]);
   private static laughPresetsBag = new ShuffleBag<EditPreset>([
-    'ghost_trail_impact', 'parallax_dual_speed', 'sigma_hard_snaps',
+    'rotating_sigma_vortex', 'ghost_trail_impact', 'parallax_dual_speed', 'sigma_hard_snaps',
   ]);
 
   // AI thought rotation — different line per expression even on the same frame

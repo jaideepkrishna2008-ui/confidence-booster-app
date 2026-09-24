@@ -20,6 +20,8 @@ import { ShuffleBag } from './services/shuffleBag';
 import { AppState, TriggerMode, EditPreset, FaceData, HandData, DetectionMetrics, TakeoverMode, FrameItem, TrackId } from './types';
 
 const globalPresetsBag = new ShuffleBag<EditPreset>([
+  'rotating_sigma_vortex',
+  'lightning_god_aura',
   'ghost_trail_impact',
   'dark_manga_strobe',
   'sigma_hard_snaps',
@@ -332,7 +334,14 @@ export const App: React.FC = () => {
               },
               getSessionFrames: () => frameBuffer.getSessionFrames(),
               getPostTriggerMoments: (now) => frameBuffer.getPostTriggerMoments(sessionStartTime, now),
-              matchedMemeImage: matchedMemeRef.current?.image || '/memes/jaideep_smile.png',
+              matchedMemeImage: matchedMemeRef.current?.image || [
+                '/memes/jaideep_jaks_superhero.jpg',
+                '/memes/sigma_lightning_aura.jpg',
+                '/memes/arab_sigma_duo.png',
+                '/memes/batman_sigma_smirk.png',
+                '/memes/heisenberg_arab.png',
+                '/memes/jaideep_chad_blue.jpg',
+              ][Math.floor(Date.now() / 6000) % 6],
               onDropImpact: onImpact,
               onComplete: onEnd,
             });
@@ -379,7 +388,7 @@ export const App: React.FC = () => {
           setMetrics(result.metrics);
 
           // Real-time AI Meme Brain Analysis using actual face landmarks
-          if (isMemeMode && result.face.detected && result.faceFeatures) {
+          if (result.face.detected && result.faceFeatures) {
             const decision = AiMemeBrain.analyze(result.faceFeatures);
             setAiThought(decision.aiThought);
 

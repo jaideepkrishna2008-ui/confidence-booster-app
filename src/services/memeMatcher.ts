@@ -10,7 +10,135 @@ export interface MemeInfo {
 }
 
 export const MEME_PROFILES: MemeInfo[] = [
-  // ─── SIGMA / COLD STARE ───────────────────────────────────────────────────
+  // ─── JAIDEEP / CREATOR CHAD ───────────────────────────────────────────────
+  {
+    id: 'jaideep_jaks_superhero',
+    name: 'Jaideep Jaks Superhero',
+    image: '/memes/jaideep_jaks_superhero.jpg',
+    description: 'Jaideep Jaks superhero bodybuilding muscle pose with bandana and shades',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.05, smile_score: 0.35, concern_score: 0.02,
+      cheers_score: 0.65, hand_raised: 1.0, num_hands: 2,
+      eye_openness: 0.20, eyes_symmetry: 0.02, mouth_openness: 0.08,
+      mouth_width_ratio: 0.52, mouth_elevation: 0.08,
+      eyebrow_height: 0.08, brow_symmetry: 0.02, sigma_score: 0.96,
+    },
+  },
+  {
+    id: 'jaideep_chad_blue',
+    name: 'Jaideep Confident Mogger',
+    image: '/memes/jaideep_chad_blue.jpg',
+    description: 'Jaideep outdoor stylish blue striped shirt confident pose',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.04, smile_score: 0.55, concern_score: 0.02,
+      cheers_score: 0.2, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.22, eyes_symmetry: 0.02, mouth_openness: 0.15,
+      mouth_width_ratio: 0.58, mouth_elevation: 0.10,
+      eyebrow_height: 0.09, brow_symmetry: 0.02, sigma_score: 0.88,
+    },
+  },
+  {
+    id: 'jaideep_young_smile',
+    name: 'Jaideep Pure Smile',
+    image: '/memes/jaideep_young_smile.png',
+    description: 'Young Jaideep bright genuine beaming smile',
+    category: 'smile',
+    features: {
+      surprise_score: 0.08, smile_score: 0.96, concern_score: 0.01,
+      cheers_score: 0.4, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.26, eyes_symmetry: 0.02, mouth_openness: 0.45,
+      mouth_width_ratio: 0.76, mouth_elevation: 0.18,
+      eyebrow_height: 0.12, brow_symmetry: 0.02, sigma_score: 0.2,
+    },
+  },
+  {
+    id: 'jaideep_smile',
+    name: 'Jaideep Bright Smile',
+    image: '/memes/jaideep_smile.png',
+    description: 'Warm authentic outdoor smile and confident posture',
+    category: 'smile',
+    features: {
+      surprise_score: 0.06, smile_score: 0.88, concern_score: 0.02,
+      cheers_score: 0.3, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.25, eyes_symmetry: 0.02, mouth_openness: 0.38,
+      mouth_width_ratio: 0.72, mouth_elevation: 0.14,
+      eyebrow_height: 0.10, brow_symmetry: 0.02, sigma_score: 0.3,
+    },
+  },
+  {
+    id: 'jaideep_candid',
+    name: 'Jaideep Candid Laugh',
+    image: '/memes/jaideep_candid.jpg',
+    description: 'Candid happy smile and sideways glance',
+    category: 'laugh',
+    features: {
+      surprise_score: 0.08, smile_score: 0.78, concern_score: 0.03,
+      cheers_score: 0.2, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.22, eyes_symmetry: 0.05, mouth_openness: 0.25,
+      mouth_width_ratio: 0.64, mouth_elevation: 0.11,
+      eyebrow_height: 0.09, brow_symmetry: 0.03, sigma_score: 0.4,
+    },
+  },
+
+  // ─── SIGMA LIGHTNING & COLD STARE ─────────────────────────────────────────
+  {
+    id: 'sigma_lightning_aura',
+    name: 'Sigma Lightning God',
+    image: '/memes/sigma_lightning_aura.jpg',
+    description: 'Glowing neon lightning eyes and furious purple divine sigma aura',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.12, smile_score: 0.05, concern_score: 0.15,
+      cheers_score: 0.1, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.28, eyes_symmetry: 0.01, mouth_openness: 0.06,
+      mouth_width_ratio: 0.46, mouth_elevation: 0.01,
+      eyebrow_height: 0.05, brow_symmetry: 0.01, sigma_score: 0.99,
+    },
+  },
+  {
+    id: 'arab_sigma_duo',
+    name: 'Arab Sigma Duo',
+    image: '/memes/arab_sigma_duo.png',
+    description: 'Arab sigma duo pointing up with fire aura and stern looks',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.08, smile_score: 0.18, concern_score: 0.08,
+      cheers_score: 0.5, hand_raised: 1.0, num_hands: 1,
+      eye_openness: 0.22, eyes_symmetry: 0.02, mouth_openness: 0.10,
+      mouth_width_ratio: 0.52, mouth_elevation: 0.04,
+      eyebrow_height: 0.07, brow_symmetry: 0.02, sigma_score: 0.94,
+    },
+  },
+  {
+    id: 'heisenberg_arab',
+    name: 'Heisenberg Keffiyeh',
+    image: '/memes/heisenberg_arab.png',
+    description: 'Walter White in keffiyeh and glasses, desert stern gaze',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.05, smile_score: 0.10, concern_score: 0.15,
+      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.20, eyes_symmetry: 0.02, mouth_openness: 0.08,
+      mouth_width_ratio: 0.50, mouth_elevation: 0.02,
+      eyebrow_height: 0.06, brow_symmetry: 0.02, sigma_score: 0.90,
+    },
+  },
+  {
+    id: 'sigma_beanie_stare',
+    name: 'Beanie Cold Stare',
+    image: '/memes/sigma_beanie_stare.png',
+    description: 'Intense cold thousand-yard stare in red spotted beanie',
+    category: 'sigma',
+    features: {
+      surprise_score: 0.02, smile_score: 0.04, concern_score: 0.18,
+      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.16, eyes_symmetry: 0.02, mouth_openness: 0.05,
+      mouth_width_ratio: 0.40, mouth_elevation: -0.02,
+      eyebrow_height: 0.04, brow_symmetry: 0.01, sigma_score: 0.95,
+    },
+  },
   {
     id: 'batman_sigma_smirk',
     name: 'Patrick Bateman Smirk',
@@ -40,20 +168,6 @@ export const MEME_PROFILES: MemeInfo[] = [
     },
   },
   {
-    id: 'heisenberg_arab',
-    name: 'Heisenberg Keffiyeh',
-    image: '/memes/heisenberg_arab.png',
-    description: 'Walter White in keffiyeh and dark sunglasses, stern gaze',
-    category: 'sigma',
-    features: {
-      surprise_score: 0.05, smile_score: 0.10, concern_score: 0.15,
-      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.20, eyes_symmetry: 0.02, mouth_openness: 0.08,
-      mouth_width_ratio: 0.50, mouth_elevation: 0.02,
-      eyebrow_height: 0.06, brow_symmetry: 0.02, sigma_score: 0.75,
-    },
-  },
-  {
     id: 'sigma_stare',
     name: 'Sigma Thousand-Yard Stare',
     image: '/memes/batman_sigma.jpg',
@@ -67,62 +181,20 @@ export const MEME_PROFILES: MemeInfo[] = [
       eyebrow_height: 0.05, brow_symmetry: 0.01, sigma_score: 0.98,
     },
   },
-  {
-    id: 'gigachad_jawline',
-    name: 'Gigachad Jawline',
-    image: '/memes/batman_sigma.jpg',
-    description: 'Ultra-chiseled jawline and peak sigma presence',
-    category: 'sigma',
-    features: {
-      surprise_score: 0.02, smile_score: 0.12, concern_score: 0.05,
-      cheers_score: 0.1, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.15, eyes_symmetry: 0.02, mouth_openness: 0.04,
-      mouth_width_ratio: 0.45, mouth_elevation: 0.02,
-      eyebrow_height: 0.07, brow_symmetry: 0.01, sigma_score: 0.99,
-    },
-  },
 
-  // ─── SMILE / LAUGH / HAPPY ────────────────────────────────────────────────
+  // ─── CLASSICS / LEGENDS ───────────────────────────────────────────────────
   {
-    id: 'jaideep_smile',
-    name: 'Jaideep Bright Smile',
-    image: '/memes/jaideep_smile.png',
-    description: 'Warm authentic outdoor smile and confident posture',
-    category: 'smile',
-    features: {
-      surprise_score: 0.06, smile_score: 0.88, concern_score: 0.02,
-      cheers_score: 0.3, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.25, eyes_symmetry: 0.02, mouth_openness: 0.38,
-      mouth_width_ratio: 0.72, mouth_elevation: 0.14,
-      eyebrow_height: 0.10, brow_symmetry: 0.02, sigma_score: 0.3,
-    },
-  },
-  {
-    id: 'jaideep_candid',
-    name: 'Jaideep Candid Laugh',
-    image: '/memes/jaideep_candid.jpg',
-    description: 'Candid happy smile and sideways glance',
-    category: 'laugh',
-    features: {
-      surprise_score: 0.08, smile_score: 0.78, concern_score: 0.03,
-      cheers_score: 0.2, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.22, eyes_symmetry: 0.05, mouth_openness: 0.25,
-      mouth_width_ratio: 0.64, mouth_elevation: 0.11,
-      eyebrow_height: 0.09, brow_symmetry: 0.03, sigma_score: 0.4,
-    },
-  },
-  {
-    id: 'success_kid',
-    name: 'Success Kid',
-    image: '/memes/success_kid.jpg',
-    description: 'Determined baby fist pump on the beach',
+    id: 'krishna_divine',
+    name: 'Divine Lord Krishna Aura',
+    image: '/memes/krishna_divine.jpg',
+    description: 'Celestial peace, serene graceful divine calm smile',
     category: 'classic',
     features: {
-      surprise_score: 0.05, smile_score: 0.52, concern_score: 0.08,
-      cheers_score: 0.52, hand_raised: 1.0, num_hands: 1,
-      eye_openness: 0.20, eyes_symmetry: 0.02, mouth_openness: 0.14,
-      mouth_width_ratio: 0.55, mouth_elevation: 0.05,
-      eyebrow_height: 0.06, brow_symmetry: 0.02, sigma_score: 0.6,
+      surprise_score: 0.04, smile_score: 0.58, concern_score: 0.01,
+      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.26, eyes_symmetry: 0.01, mouth_openness: 0.06,
+      mouth_width_ratio: 0.54, mouth_elevation: 0.08,
+      eyebrow_height: 0.09, brow_symmetry: 0.01, sigma_score: 0.5,
     },
   },
   {
@@ -140,6 +212,20 @@ export const MEME_PROFILES: MemeInfo[] = [
     },
   },
   {
+    id: 'success_kid',
+    name: 'Success Kid',
+    image: '/memes/success_kid.jpg',
+    description: 'Determined baby fist pump on the beach',
+    category: 'classic',
+    features: {
+      surprise_score: 0.05, smile_score: 0.52, concern_score: 0.08,
+      cheers_score: 0.52, hand_raised: 1.0, num_hands: 1,
+      eye_openness: 0.20, eyes_symmetry: 0.02, mouth_openness: 0.14,
+      mouth_width_ratio: 0.55, mouth_elevation: 0.05,
+      eyebrow_height: 0.06, brow_symmetry: 0.02, sigma_score: 0.6,
+    },
+  },
+  {
     id: 'gene_wilder',
     name: 'Gene Wilder Wonka',
     image: '/memes/gene_wilder.jpg',
@@ -154,22 +240,6 @@ export const MEME_PROFILES: MemeInfo[] = [
     },
   },
   {
-    id: 'krishna_divine',
-    name: 'Divine Lord Krishna Aura',
-    image: '/memes/krishna_divine.jpg',
-    description: 'Celestial peace, serene graceful divine calm smile',
-    category: 'classic',
-    features: {
-      surprise_score: 0.04, smile_score: 0.58, concern_score: 0.01,
-      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.26, eyes_symmetry: 0.01, mouth_openness: 0.06,
-      mouth_width_ratio: 0.54, mouth_elevation: 0.08,
-      eyebrow_height: 0.09, brow_symmetry: 0.01, sigma_score: 0.5,
-    },
-  },
-
-  // ─── CRAZY / SHOCK / WILD ─────────────────────────────────────────────────
-  {
     id: 'undertaker_eyes',
     name: 'Undertaker Crazy Eyes',
     image: '/memes/undertaker_eyes.png',
@@ -183,7 +253,6 @@ export const MEME_PROFILES: MemeInfo[] = [
       eyebrow_height: 0.22, brow_symmetry: 0.03, sigma_score: 0.1,
     },
   },
-
   {
     id: 'angry_baby',
     name: 'Angry Baby',

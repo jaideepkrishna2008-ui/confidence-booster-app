@@ -1,6 +1,12 @@
 export type AppState = 'STANDBY' | 'EDITING' | 'PLAYING';
 
-export type EditPreset = 'ghost_trail_impact' | 'dark_manga_strobe' | 'parallax_dual_speed' | 'sigma_hard_snaps';
+export type EditPreset =
+  | 'ghost_trail_impact'
+  | 'dark_manga_strobe'
+  | 'parallax_dual_speed'
+  | 'sigma_hard_snaps'
+  | 'rotating_sigma_vortex'
+  | 'lightning_god_aura';
 
 export type TrackId = 'montagem_tomada' | 'mogger' | 'marlon_mogged' | 'tokyo_drift' | 'cyber_sigma' | 'gigachad_anthem';
 

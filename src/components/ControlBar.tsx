@@ -29,10 +29,12 @@ interface ControlBarProps {
 }
 
 const PRESET_LABELS: Record<string, string> = {
-  ghost_trail_impact:  '👻 Ghost Trail',
-  dark_manga_strobe:   '📖 Manga Strobe',
-  sigma_hard_snaps:    '⚡ Sigma Snaps',
-  parallax_dual_speed: '🌀 Parallax Dual',
+  rotating_sigma_vortex: '🌀 Rotating Vortex',
+  lightning_god_aura:    '⚡ Lightning God',
+  ghost_trail_impact:    '👻 Ghost Trail',
+  dark_manga_strobe:     '📖 Manga Strobe',
+  sigma_hard_snaps:      '⚡ Sigma Snaps',
+  parallax_dual_speed:   '💫 Parallax Dual',
 };
 
 const MODE_LABELS: Record<string, string> = {

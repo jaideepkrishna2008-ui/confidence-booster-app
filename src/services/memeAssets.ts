@@ -11,22 +11,28 @@ export interface MemeAssetItem {
 }
 
 const MEME_SOURCES: Array<{ id: string; name: string; src: string }> = [
-  // Sigma / cold
-  { id: 'batman_sigma_smirk', name: 'Patrick Bateman Smirk',     src: '/memes/batman_sigma_smirk.png' },
-  { id: 'batman_sigma_pout',  name: 'Bateman Sigma Pout',         src: '/memes/batman_sigma_pout.png' },
-  { id: 'sigma_stare',        name: 'Sigma Thousand-Yard Stare',  src: '/memes/batman_sigma.jpg' },
-  { id: 'gigachad_jawline',   name: 'Gigachad Jawline',           src: '/memes/batman_sigma.jpg' },
-  { id: 'heisenberg_arab',    name: 'Heisenberg Keffiyeh',        src: '/memes/heisenberg_arab.png' },
-  // Laugh / happy
-  { id: 'jaideep_smile',      name: 'Jaideep Bright Smile',       src: '/memes/jaideep_smile.png' },
-  { id: 'jaideep_candid',     name: 'Jaideep Candid Laugh',       src: '/memes/jaideep_candid.jpg' },
-  { id: 'leonardo_dicaprio',  name: 'Leo DiCaprio Toast',         src: '/memes/leonardo_dicaprio.jpg' },
-  { id: 'success_kid',        name: 'Success Kid',                src: '/memes/success_kid.jpg' },
-  { id: 'gene_wilder',        name: 'Gene Wilder Wonka',          src: '/memes/gene_wilder.jpg' },
-  { id: 'krishna_divine',     name: 'Divine Lord Krishna',        src: '/memes/krishna_divine.jpg' },
-  // Crazy / shock
-  { id: 'undertaker_eyes',    name: 'Undertaker Crazy Eyes',      src: '/memes/undertaker_eyes.png' },
-  { id: 'angry_baby',         name: 'Angry Baby',                 src: '/memes/angry_baby.jpg' },
+  // Jaideep Creator & Superheroes
+  { id: 'jaideep_jaks_superhero', name: 'Jaideep Jaks Superhero',   src: '/memes/jaideep_jaks_superhero.jpg' },
+  { id: 'jaideep_chad_blue',      name: 'Jaideep Confident Mogger',  src: '/memes/jaideep_chad_blue.jpg' },
+  { id: 'jaideep_young_smile',    name: 'Jaideep Pure Smile',        src: '/memes/jaideep_young_smile.png' },
+  { id: 'jaideep_smile',          name: 'Jaideep Bright Smile',      src: '/memes/jaideep_smile.png' },
+  { id: 'jaideep_candid',         name: 'Jaideep Candid Laugh',      src: '/memes/jaideep_candid.jpg' },
+  // Sigma Gods & Cold Stare
+  { id: 'sigma_lightning_aura',   name: 'Sigma Lightning God',       src: '/memes/sigma_lightning_aura.jpg' },
+  { id: 'arab_sigma_duo',         name: 'Arab Sigma Duo',            src: '/memes/arab_sigma_duo.png' },
+  { id: 'heisenberg_arab',        name: 'Heisenberg Keffiyeh',       src: '/memes/heisenberg_arab.png' },
+  { id: 'sigma_beanie_stare',     name: 'Beanie Cold Stare',         src: '/memes/sigma_beanie_stare.png' },
+  { id: 'batman_sigma_smirk',     name: 'Patrick Bateman Smirk',     src: '/memes/batman_sigma_smirk.png' },
+  { id: 'batman_sigma_pout',      name: 'Bateman Sigma Pout',        src: '/memes/batman_sigma_pout.png' },
+  { id: 'sigma_stare',            name: 'Sigma Thousand-Yard Stare', src: '/memes/batman_sigma.jpg' },
+  { id: 'gigachad_jawline',       name: 'Gigachad Jawline',          src: '/memes/batman_sigma.jpg' },
+  // Classics & Legends
+  { id: 'krishna_divine',         name: 'Divine Lord Krishna',       src: '/memes/krishna_divine.jpg' },
+  { id: 'leonardo_dicaprio',      name: 'Leo DiCaprio Toast',        src: '/memes/leonardo_dicaprio.jpg' },
+  { id: 'success_kid',            name: 'Success Kid',               src: '/memes/success_kid.jpg' },
+  { id: 'gene_wilder',            name: 'Gene Wilder Wonka',         src: '/memes/gene_wilder.jpg' },
+  { id: 'undertaker_eyes',        name: 'Undertaker Crazy Eyes',     src: '/memes/undertaker_eyes.png' },
+  { id: 'angry_baby',             name: 'Angry Baby',                src: '/memes/angry_baby.jpg' },
 ];
 
 class MemeAssetManager {

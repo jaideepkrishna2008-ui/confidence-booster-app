@@ -30,6 +30,7 @@ class EditRenderer {
   private moggedImageLoaded: boolean = false;
   private currentMemeImage: HTMLImageElement | null = null;
   private currentMemeSrc: string = '';
+  private currentPreset: string = '';
 
   constructor() {
     this.loadMoggedPng();
@@ -53,7 +54,7 @@ class EditRenderer {
     elapsed: number,
     triggerTime: number,
     duration: number = 850,
-    label: string = 'BATMAN // SIGMA DROP'
+    label?: string
   ): void {
     const img =
       (this.currentMemeSrc ? memeAssets.getMemeImage(this.currentMemeSrc) : null) ||
@@ -66,20 +67,26 @@ class EditRenderer {
     if (rel < 0 || rel > duration) return;
 
     const p = rel / duration;
-    // Jumin and jumout:
-    // Stage 1 (0..0.38): explosive zoom in ("jumin") from 0.65x to 1.35x
-    // Stage 2 (0.38..1.0): smooth cinematic zoom out ("jumout") from 1.35x down to 1.0x with fade out
+    // Jumin and jumout with explosive Rotating Vortex:
+    // Stage 1 (0..0.38): explosive zoom in ("jumin") from 0.65x to 1.35x + 360 degree spin
+    // Stage 2 (0.38..1.0): smooth cinematic zoom out ("jumout") from 1.35x down to 1.0x with rhythmic wobble
     let scale: number;
     let alpha: number;
+    let rotation: number = 0;
+
     if (p < 0.38) {
       const sub = p / 0.38;
       const ease = 1 - Math.pow(1 - sub, 3);
       scale = 0.65 + ease * 0.70; // 0.65 -> 1.35
       alpha = Math.min(1, sub * 1.6);
+      // Rotating face: spin in from -360° to 0°
+      rotation = (1 - ease) * -Math.PI * 2;
     } else {
       const sub = (p - 0.38) / 0.62;
       scale = 1.35 - sub * 0.35; // 1.35 -> 1.00
       alpha = 1 - sub * sub;
+      // Rhythmic rocking wobble during the drop
+      rotation = Math.sin(sub * Math.PI * 4) * 0.08 * (1 - sub);
     }
 
     ctx.save();
@@ -87,25 +94,105 @@ class EditRenderer {
 
     const cx = w / 2;
     const cy = h / 2;
-    const size = Math.min(w * 0.52, h * 0.52, 360);
+    const size = Math.min(w * 0.54, h * 0.54, 380);
 
+    // Apply rotation and scale around center
     ctx.translate(cx, cy);
+    ctx.rotate(rotation);
     ctx.scale(scale, scale);
     ctx.translate(-cx, -cy);
 
     const x = cx - size / 2;
     const y = cy - size / 2;
 
-    // Glowing cyber neon border and drop shadow
-    ctx.shadowColor = '#00ffcc';
-    ctx.shadowBlur = 25;
-    ctx.strokeStyle = '#00ffcc';
-    ctx.lineWidth = 3.5;
+    // Theme color customization based on active meme
+    let glowColor = '#00ffcc';
+    let borderColor = '#00ffcc';
+    let displayLabel = label || 'SIGMA // DROP';
 
+    if (this.currentMemeSrc) {
+      if (this.currentMemeSrc.includes('jaks')) {
+        glowColor = '#ef4444';
+        borderColor = '#facc15';
+        displayLabel = 'JAIDEEP JAKS // SUPERHERO SIGMA';
+      } else if (this.currentMemeSrc.includes('lightning')) {
+        glowColor = '#c084fc';
+        borderColor = '#facc15';
+        displayLabel = 'SIGMA GOD // LIGHTNING AURA';
+      } else if (this.currentMemeSrc.includes('arab_sigma')) {
+        glowColor = '#f97316';
+        borderColor = '#22c55e';
+        displayLabel = 'ARAB SIGMA // MOGGED DUO';
+      } else if (this.currentMemeSrc.includes('heisenberg')) {
+        glowColor = '#f59e0b';
+        borderColor = '#10b981';
+        displayLabel = 'HEISENBERG // KEFFIYEH';
+      } else if (this.currentMemeSrc.includes('beanie')) {
+        glowColor = '#ef4444';
+        borderColor = '#00f0ff';
+        displayLabel = 'COLD BEANIE // 1000-YARD STARE';
+      } else if (this.currentMemeSrc.includes('young_smile')) {
+        glowColor = '#10b981';
+        borderColor = '#38bdf8';
+        displayLabel = 'JAIDEEP // 100% PURE SMILE';
+      } else if (this.currentMemeSrc.includes('chad_blue')) {
+        glowColor = '#0284c7';
+        borderColor = '#38bdf8';
+        displayLabel = 'JAIDEEP // CONFIDENT MOGGER';
+      } else if (this.currentMemeSrc.includes('jaideep_smile')) {
+        glowColor = '#10b981';
+        borderColor = '#facc15';
+        displayLabel = 'JAIDEEP // BRIGHT SMILE';
+      } else if (this.currentMemeSrc.includes('jaideep_candid')) {
+        glowColor = '#06b6d4';
+        borderColor = '#10b981';
+        displayLabel = 'JAIDEEP // CANDID LAUGH';
+      } else if (this.currentMemeSrc.includes('batman_sigma_pout')) {
+        glowColor = '#00f0ff';
+        borderColor = '#00ff66';
+        displayLabel = 'BATEMAN // MAXIMUM POUT';
+      } else if (this.currentMemeSrc.includes('batman')) {
+        glowColor = '#00ffcc';
+        borderColor = '#00ffcc';
+        displayLabel = 'PATRICK BATEMAN // COLD GAZE';
+      } else if (this.currentMemeSrc.includes('krishna')) {
+        glowColor = '#3b82f6';
+        borderColor = '#facc15';
+        displayLabel = 'LORD KRISHNA // DIVINE AURA';
+      } else if (this.currentMemeSrc.includes('dicaprio')) {
+        glowColor = '#facc15';
+        borderColor = '#fbbf24';
+        displayLabel = 'LEO DICAPRIO // GATSBY TOAST';
+      }
+    }
+
+    // Glowing cyber neon border and drop shadow
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 30;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 4;
+
+    // Draw electrical lightning arcs around frame
+    if (this.currentMemeSrc.includes('lightning') || p < 0.45) {
+      ctx.save();
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const lx = x + Math.random() * size;
+        const ly = y + (Math.random() > 0.5 ? -10 : size + 10);
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + (Math.random() - 0.5) * 35, ly + (Math.random() - 0.5) * 35);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Clip image with rounded corners
     ctx.save();
     ctx.beginPath();
     if (typeof (ctx as any).roundRect === 'function') {
-      (ctx as any).roundRect(x, y, size, size, 16);
+      (ctx as any).roundRect(x, y, size, size, 18);
     } else {
       ctx.rect(x, y, size, size);
     }
@@ -113,26 +200,28 @@ class EditRenderer {
     this.drawCover(ctx, img, x, y, size, size, false);
     ctx.restore();
 
-    // Border
+    // Outer Cyber Border
     ctx.beginPath();
     if (typeof (ctx as any).roundRect === 'function') {
-      (ctx as any).roundRect(x, y, size, size, 16);
+      (ctx as any).roundRect(x, y, size, size, 18);
     } else {
       ctx.rect(x, y, size, size);
     }
     ctx.stroke();
 
     // Top cyber badge
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(cx - 100, y - 16, 200, 24);
-    ctx.strokeStyle = '#00ffcc';
+    const badgeW = Math.min(260, size * 0.85);
+    ctx.fillStyle = 'rgba(5, 8, 14, 0.92)';
+    ctx.fillRect(cx - badgeW / 2, y - 18, badgeW, 26);
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(cx - 100, y - 16, 200, 24);
-    ctx.fillStyle = '#00ffcc';
-    ctx.font = 'bold 11px monospace';
+    ctx.strokeRect(cx - badgeW / 2, y - 18, badgeW, 26);
+
+    ctx.fillStyle = borderColor;
+    ctx.font = 'bold 10px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, cx, y - 4);
+    ctx.fillText(displayLabel, cx, y - 5);
 
     ctx.restore();
   }
@@ -215,6 +304,7 @@ class EditRenderer {
   startEdit(options: EditRenderOptions): void {
     this.stop();
     this.isRendering = true;
+    this.currentPreset = options.preset;
 
     if (options.preset === 'ghost_trail_impact' || options.preset === 'parallax_dual_speed') {
       this.startGhostTrailImpact(options);
@@ -552,11 +642,19 @@ class EditRenderer {
       }
     }
 
+    let rot = 0;
+    if (this.currentPreset === 'rotating_sigma_vortex') {
+      const rotDir = kickIdx % 2 === 0 ? 1 : -1;
+      const decay = Math.max(0, 1 - diff / 220);
+      rot = rotDir * decay * 0.16; // ~9.2 degree rotation snap on kicks
+    }
+
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, w, h);
     ctx.clip();
     ctx.translate(cx + shakeX, cy + shakeY);
+    if (rot !== 0) ctx.rotate(rot);
     ctx.scale(zoom, zoom);
     ctx.translate(-cx, -cy);
 
@@ -579,6 +677,28 @@ class EditRenderer {
       drawBitmapOrVideo(-offset, -2);
       ctx.filter = 'hue-rotate(-90deg) contrast(180%) brightness(120%)';
       drawBitmapOrVideo(offset, 2);
+      ctx.restore();
+    }
+
+    // Lightning God Aura electric sparks
+    if (this.currentPreset === 'lightning_god_aura' && diff < 220) {
+      ctx.save();
+      ctx.strokeStyle = Math.random() > 0.5 ? '#c084fc' : '#facc15';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#c084fc';
+      ctx.shadowBlur = 12;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        let lx = cx + (Math.random() - 0.5) * w * 0.6;
+        let ly = cy + (Math.random() - 0.5) * h * 0.6;
+        ctx.moveTo(lx, ly);
+        for (let j = 0; j < 4; j++) {
+          lx += (Math.random() - 0.5) * 60;
+          ly += (Math.random() - 0.5) * 60;
+          ctx.lineTo(lx, ly);
+        }
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
