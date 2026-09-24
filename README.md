@@ -1,9 +1,15 @@
 # 🗿 Confidence Booster // Sigma Phonk Tactical Webcam & Meme Matcher
 
-> **Live Reference:** [am1t-builds-rm3g.vercel.app](https://am1t-builds-rm3g.vercel.app/)  
-> **Facial Expression Meme Matcher Engine:** Integrated with [kristelTech/make_me_a_meme](https://github.com/kristelTech/make_me_a_meme)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/55df2956-02f8-469e-b20e-8e18fe3cf77c/deploy-status)](https://app.netlify.com/projects/sigma-jaks360/deploys)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 
-An AI-powered tactical webcam application built with **React**, **Vite**, **TypeScript**, **MediaPipe Vision AI**, and the **Web Audio API**. It tracks your head posture and hand gestures in real-time, calculates confidence metrics, and automatically unleashes high-energy Sigma Phonk edits, beat-synced visual hard snaps, and bass drops whenever you take a sip of water or push up your glasses!
+> 🚀 **Live Production Link:** [https://sigma-jaks360.netlify.app](https://sigma-jaks360.netlify.app)  
+> ⚡ **Creator & Superhero Theme:** Jaideep Jaks 360 Edition
+
+An AI-powered tactical webcam application built with **React**, **Vite**, **TypeScript**, **MediaPipe Vision AI**, and the **Web Audio API**. It tracks your head posture, facial expressions, and hand gestures in real-time, calculates tactical confidence metrics, and automatically unleashes high-energy Sigma Phonk edits, 360° rotating vortex drops, beat-synced visual hard snaps, and bass drops whenever you lock in!
 
 ---
 
@@ -14,28 +20,25 @@ An AI-powered tactical webcam application built with **React**, **Vite**, **Type
 - **Cyberpunk Tactical Aesthetics:** Authentic CRT scanlines, CRT vignette, neon reticles, and Orbitron / Share Tech Mono typography.
 - **Dynamic Gauges:** Real-time progress bars for Drink Sip probability, Glasses Adjustment score, and microphone broadcast level.
 
-### 2. 🤖 MediaPipe AI Gesture Triggers
-- **Drink Sip Detection:** Triggers when your head tilts back while a hand moves near your mouth.
-- **Glasses Adjustment Detection:** Triggers when your fingertips move near the bridge of your nose / eye line.
-- **Manual Trigger:** Press `SPACEBAR` or click **TRIGGER** anytime for an instant confidence boost.
+### 2. 🌀 Rotating Face Vortex & Sigma Themes
+- **Rotating Sigma Vortex (`rotating_sigma_vortex`):** Explosive -360° to 0° rotational spin-in, rhythmic wobble on drop, and alternating beat-kick rotational snaps.
+- **Lightning God Aura (`lightning_god_aura`):** Pulsing neon purple & gold electric lightning arcs radiating from your face on 808 kicks.
+- **Ghost Trail Impact (`ghost_trail_impact`):** Phonk ghost trails, 808 sub-bass shatter, and dramatic zoom (`Montagem Tomada`).
+- **Dark Manga Strobe (`dark_manga_strobe`):** High-contrast black & white manga strobe glitches with inverted negatives (`Mogger`).
+- **Sigma Hard Snaps (`sigma_hard_snaps`):** Beat-synced visual hard snaps on 808 kicks with chromatic aberration and the iconic `MOGGED` overlay.
+- **Parallax Dual Speed (`parallax_dual_speed`):** Dual-speed temporal frame blending for intense slow-motion playback.
 
-### 3. 😂 Real-Time Meme Matcher (kristelTech/make_me_a_meme)
-- Analyzes 13 facial and hand features (eye openness, brow height, mouth curvature, hand gestures).
-- Real-time exponential-decay similarity matching against 6 iconic internet memes:
-  - 🥂 **Leonardo DiCaprio:** Great Gatsby champagne toast (cheers gesture & smile)
-  - ✊ **Success Kid:** Determined baby fist pump
-  - 🔥 **Disaster Girl:** Smirking sideways glance
-  - 🤔 **Gene Wilder:** Willy Wonka sarcastic smirk with hand on chin
-  - 👁️ **Overly Attached Girlfriend:** Wide-eyed intense stare
-  - 😠 **Angry Baby:** Furrowed brows and stern expression
+### 3. 👑 100% Masculine & Creator Sigma Meme Lineup
+- **Jaideep Jaks Superhero:** Bodybuilder pose with bandana & shades.
+- **Sigma Lightning God:** Purple divine aura & neon electric eyes.
+- **Arab Sigma Duo:** Keffiyeh duo pointing to victory with fire aura.
+- **Heisenberg Keffiyeh:** Walter White in desert keffiyeh and glasses.
+- **Beanie Cold Stare:** Thousand-yard stare in red spotted beanie.
+- **Patrick Bateman Smirk & Pout:** Christian Bale iconic American Psycho sigma facial expressions.
+- **Jaideep Confident Mogger & Pure Smile:** High-confidence creator poses.
+- **Divine Lord Krishna & Leo DiCaprio:** S-tier classic masculine legends.
 
-### 4. 🎬 High-Impact Sigma Phonk Edit Presets
-- **Ghost Trail Impact:** Phonk ghost trails, 808 sub-bass shatter, and dramatic zoom (`Montagem Tomada`).
-- **Dark Manga Invert:** High-contrast black & white manga strobe glitches (`Mogger`).
-- **Sigma Hard Snaps:** Beat-synced visual hard snaps on 808 kicks with chromatic aberration and the iconic `MOGGED` overlay (`Marlon Gets Mogged`).
-- **Parallax Dual Speed:** Dual-speed temporal frame blending for intense slow-motion playback.
-
-### 5. 🎙️ Virtual Audio Cable Broadcast Engine
+### 4. 🎙️ Virtual Audio Cable Broadcast Engine
 - Custom Web Audio API mixer featuring:
   - 80Hz Highpass filter + 7.8kHz Lowpass filter
   - Dual peaking formant and presence filters
@@ -43,7 +46,7 @@ An AI-powered tactical webcam application built with **React**, **Vite**, **Type
   - Real-time microphone capture mixed directly with Phonk audio tracks
 - Stream directly into **Discord**, **Zoom**, **Google Meet**, **OmeTV**, or **OBS** so your friends hear the bass drop over the call.
 
-### 6. 🎥 OBS Studio & Streaming Integration
+### 5. 🎥 OBS Studio & Streaming Integration
 - **Clean Pop-Out Projector Window:** Borderless 16:9 projector with an independent 60 FPS video decoder for OBS Window Capture.
 - **Always-on-Top PiP Mode:** Uses modern Document Picture-in-Picture to float over your video calls without tab throttling.
 - **Zero-UI Broadcast Mode:** Press `ESC` to toggle off all controls for instant clean screen capture.
@@ -81,16 +84,17 @@ npm run dev
 
 ## 🎮 Hotkeys & Controls
 
-| Key | Action |
+| Key / Control | Action |
 |---|---|
 | `Space` | Manually trigger Sigma Phonk edit sequence |
-| `Escape` | Exit Zero-UI mode |
+| `Escape` | Toggle Zero-UI mode for clean screen recordings |
 | `Camera Icon` | Switch between front and rear cameras |
 | `Mirror Icon` | Toggle horizontal mirror reflection |
-| `Mute Icon` | Mute / Unmute Phonk music |
+| `Audio Icon` | Mute / Unmute Phonk music |
 | `TRACKS` | Open Phonk soundboard & soundtrack selection |
-| `STREAM / OBS`| Open OBS virtual camera and cable broadcast guide |
-| `MEME MODE` | Toggle real-time Meme Matcher HUD preview |
+| `STREAM` | Open OBS virtual camera and cable broadcast guide |
+| `PRESET` | Select between 6 dynamic editing themes |
+| `MODE` | Switch trigger mode (`ALL`, `FACE EXPR`, `CRAZY MOV`, `DRINK SIP`, `GLASSES`) |
 
 ---
 
@@ -101,6 +105,7 @@ npm run dev
 - **Computer Vision & AI:** `@mediapipe/tasks-vision` (FaceLandmarker & HandLandmarker)
 - **Audio Processing:** Web Audio API (BiquadFilterNodes, DynamicsCompressor, Custom WaveShaper distortion)
 - **Icons:** `lucide-react`
+- **Hosting:** Netlify Edge
 
 ---
 
