@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, X, Music, Play, Square, Radio, Disc3, Sparkles } from 'lucide-react';
+import { Volume2, X, Music, Play, Square, Radio, Disc3, Sparkles, Zap, Check } from 'lucide-react';
 import { SOUND_TRACKS } from '../services/broadcastAudioEngine';
 import { phonkAudio } from '../services/phonkAudioEngine';
 
@@ -21,6 +21,7 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
   onVolumeChange,
 }) => {
   const [playingPreview, setPlayingPreview] = useState<string | null>(null);
+  const [activeSfx, setActiveSfx] = useState<'808' | 'scratch' | null>(null);
 
   if (!isOpen) return null;
 
@@ -35,6 +36,18 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
         setPlayingPreview(null);
       });
     }
+  };
+
+  const handleTrigger808 = async () => {
+    setActiveSfx('808');
+    await phonkAudio.playQuickPhonkTest();
+    setTimeout(() => setActiveSfx(null), 600);
+  };
+
+  const handleTriggerScratch = async () => {
+    setActiveSfx('scratch');
+    await phonkAudio.playVinylScratch();
+    setTimeout(() => setActiveSfx(null), 500);
   };
 
   const handleClose = () => {
@@ -60,7 +73,7 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
                 PHONK SOUNDBOARD & AUDIO DECK
               </h2>
               <p className="text-[10px] text-gray-400 font-mono">
-                HIGH-OCTANE PHONK RUNTIMES // AUTOMATIC SYNC WITH AI BRAIN
+                HIGH-OCTANE RUNTIMES // INSTANT TRIGGER & PREVIEWS
               </p>
             </div>
           </div>
@@ -120,32 +133,34 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
                       : 'border-gray-800/80 bg-gray-950/60 text-gray-300 hover:border-cyan-500/40 hover:bg-gray-900/60'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    {/* Visual Disk / Equalizer Icon */}
-                    <div className={`p-2 rounded-lg ${isSelected ? 'bg-cyan-400/20 text-cyan-300' : 'bg-gray-900 text-gray-500'}`}>
+                  {/* Left: Disc + Track Info */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
+                    <div className={`p-2 rounded-lg shrink-0 ${isSelected ? 'bg-cyan-400/20 text-cyan-300' : 'bg-gray-900 text-gray-500'}`}>
                       <Disc3 className={`w-4 h-4 ${isPlaying ? 'animate-spin text-cyber-pink' : ''}`} />
                     </div>
 
-                    <div className="flex flex-col">
-                      <div className="font-cyber font-bold text-xs flex items-center gap-2">
-                        <span className={isSelected ? 'text-cyan-400 glow-cyan' : 'text-gray-400'}>
-                          {track.title}
-                        </span>
-                        {isSelected && (
-                          <span className="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.2 rounded font-mono border border-cyan-500/30">
-                            ACTIVE
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className={`font-cyber font-bold text-xs truncate ${isSelected ? 'text-cyan-300 glow-cyan' : 'text-gray-300'}`}>
+                        {track.title}
+                      </span>
                       <div className="text-[10px] text-gray-400 font-mono mt-0.5 flex items-center gap-2">
                         <span>{track.bpm} BPM</span>
                         <span>//</span>
-                        <span className="text-gray-300">{track.vibe}</span>
+                        <span className="text-gray-400 truncate">{track.vibe}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Right: Clean Separate Controls */}
+                  <div className="flex items-center gap-2.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {/* Active Pill Badge */}
+                    {isSelected && (
+                      <span className="inline-flex items-center gap-1 text-[9px] bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded font-cyber font-bold border border-cyan-400/40 shadow-sm shadow-cyan-500/20">
+                        <Check className="w-3 h-3 text-cyan-400" />
+                        ACTIVE
+                      </span>
+                    )}
+
                     {isPlaying && (
                       <div className="flex items-end gap-0.5 h-3 px-1">
                         <span className="w-1 bg-cyber-pink rounded-full animate-[bounce_0.6s_infinite]" />
@@ -154,13 +169,14 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
                       </div>
                     )}
 
+                    {/* Preview Button */}
                     <button
                       type="button"
                       onClick={(e) => handleTogglePreview(trackKey, e)}
-                      className={`btn-cyber text-[10px] px-2.5 py-1 ${
+                      className={`btn-cyber text-[10px] px-3 py-1.5 rounded-lg border transition-all ${
                         isPlaying
-                          ? 'btn-ghost-pink text-cyber-pink border-cyber-pink'
-                          : 'btn-ghost-cyan'
+                          ? 'bg-cyber-pink/20 text-cyber-pink border-cyber-pink shadow-md shadow-cyber-pink/30 hover:bg-cyber-pink hover:text-white'
+                          : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/40 hover:bg-cyan-400 hover:text-black hover:border-cyan-400'
                       }`}
                       title={isPlaying ? 'Stop beat preview' : 'Preview track beat'}
                     >
@@ -185,22 +201,32 @@ export const SoundboardModal: React.FC<SoundboardModalProps> = ({
 
         {/* Quick SFX Console */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <Sparkles className="w-3 h-3 text-cyan-400" />
-            <span className="font-cyber font-bold">TACTICAL SFX:</span>
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-cyber font-bold tracking-wider">TACTICAL SFX:</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2.5">
             <button
-              onClick={() => phonkAudio.playQuickPhonkTest()}
-              className="btn-cyber btn-ghost-cyan text-[10px] px-3 py-1"
+              onClick={handleTrigger808}
+              className={`btn-cyber text-[10px] px-3.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                activeSfx === '808'
+                  ? 'bg-cyan-400 text-black border-cyan-400 shadow-lg shadow-cyan-400/50 scale-105'
+                  : 'bg-cyan-950/50 text-cyan-300 border-cyan-500/40 hover:bg-cyan-400 hover:text-black hover:border-cyan-400'
+              }`}
             >
-              808 Bass Drop
+              <Zap className={`w-3.5 h-3.5 ${activeSfx === '808' ? 'fill-current animate-bounce' : ''}`} />
+              <span>808 BASS DROP</span>
             </button>
             <button
-              onClick={() => phonkAudio.playVinylScratch()}
-              className="btn-cyber btn-ghost-pink text-[10px] px-3 py-1"
+              onClick={handleTriggerScratch}
+              className={`btn-cyber text-[10px] px-3.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                activeSfx === 'scratch'
+                  ? 'bg-cyber-pink text-white border-cyber-pink shadow-lg shadow-cyber-pink/50 scale-105'
+                  : 'bg-pink-950/40 text-pink-300 border-pink-500/40 hover:bg-cyber-pink hover:text-white hover:border-cyber-pink'
+              }`}
             >
-              Vinyl Scratch
+              <Disc3 className={`w-3.5 h-3.5 ${activeSfx === 'scratch' ? 'animate-spin' : ''}`} />
+              <span>VINYL SCRATCH</span>
             </button>
           </div>
         </div>

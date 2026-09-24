@@ -289,3 +289,29 @@ body {
 }
 .corner-bracket::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 2px 0 0 0; }
 .corner-bracket::after  { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-radius: 0 2px 0 0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   NETLIFY BADGE & DRAWER SUPPRESSION
+═══════════════════════════════════════════════════════════════════ */
+netlify-hud,
+[class*="netlify"],
+[id*="netlify"],
+[data-netlify-badge],
+.netlify-badge,
+iframe[src*="netlify"],
+div:has(> a[href*="netlify.com"]),
+div:has(> [href*="netlify"]),
+a[href*="netlify.com"],
+a[href*="netlify.app"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  top: -99999px !important;
+  left: -99999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  z-index: -99999 !important;
+}
+

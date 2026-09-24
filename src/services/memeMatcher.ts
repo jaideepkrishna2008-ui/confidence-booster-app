@@ -68,17 +68,17 @@ export const MEME_PROFILES: MemeInfo[] = [
     },
   },
   {
-    id: 'disaster_girl',
-    name: 'Disaster Girl',
-    image: '/memes/disaster_girl.jpg',
-    description: 'Smirking girl with burning house behind — chaos energy',
+    id: 'gigachad_jawline',
+    name: 'Gigachad Jawline',
+    image: '/memes/batman_sigma.jpg',
+    description: 'Ultra-chiseled jawline and peak sigma presence',
     category: 'sigma',
     features: {
-      surprise_score: 0.04, smile_score: 0.68, concern_score: 0.06,
-      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.21, eyes_symmetry: 0.07, mouth_openness: 0.12,
-      mouth_width_ratio: 0.62, mouth_elevation: 0.12,
-      eyebrow_height: 0.07, brow_symmetry: 0.05, sigma_score: 0.70,
+      surprise_score: 0.02, smile_score: 0.12, concern_score: 0.05,
+      cheers_score: 0.1, hand_raised: 0.0, num_hands: 0,
+      eye_openness: 0.15, eyes_symmetry: 0.02, mouth_openness: 0.04,
+      mouth_width_ratio: 0.45, mouth_elevation: 0.02,
+      eyebrow_height: 0.07, brow_symmetry: 0.01, sigma_score: 0.99,
     },
   },
 
@@ -183,20 +183,7 @@ export const MEME_PROFILES: MemeInfo[] = [
       eyebrow_height: 0.22, brow_symmetry: 0.03, sigma_score: 0.1,
     },
   },
-  {
-    id: 'overly_attached_girlfriend',
-    name: 'Overly Attached GF',
-    image: '/memes/overly_attached_girlfriend.jpg',
-    description: 'Intense wide-eyed stare into the camera — never blinking',
-    category: 'crazy',
-    features: {
-      surprise_score: 0.55, smile_score: 0.50, concern_score: 0.12,
-      cheers_score: 0.0, hand_raised: 0.0, num_hands: 0,
-      eye_openness: 0.42, eyes_symmetry: 0.02, mouth_openness: 0.18,
-      mouth_width_ratio: 0.58, mouth_elevation: 0.06,
-      eyebrow_height: 0.14, brow_symmetry: 0.02, sigma_score: 0.2,
-    },
-  },
+
   {
     id: 'angry_baby',
     name: 'Angry Baby',

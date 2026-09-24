@@ -24,8 +24,8 @@ interface ControlBarProps {
   sensitivity: number;
   onChangeSensitivity: (val: number) => void;
   isEditing: boolean;
-  isMemeMode: boolean;
-  onToggleMemeMode: () => void;
+  isMemeMode?: boolean;
+  onToggleMemeMode?: () => void;
 }
 
 const PRESET_LABELS: Record<string, string> = {
@@ -142,18 +142,6 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         >
           <Tv className="w-3 h-3" />
           <span className="hidden md:inline">STREAM</span>
-        </button>
-
-        {/* Meme Mode Toggle */}
-        <button
-          onClick={onToggleMemeMode}
-          title="Toggle Real-time AI Meme Brain"
-          className={`btn-cyber text-[9px] hidden md:flex ${
-            isMemeMode ? 'btn-ghost-pink' : 'border border-gray-700 text-gray-500 hover:text-white'
-          }`}
-        >
-          <Smile className="w-3 h-3" />
-          <span className="hidden lg:inline">MEME AI</span>
         </button>
       </div>
 

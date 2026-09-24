@@ -15,8 +15,8 @@ const MEME_SOURCES: Array<{ id: string; name: string; src: string }> = [
   { id: 'batman_sigma_smirk', name: 'Patrick Bateman Smirk',     src: '/memes/batman_sigma_smirk.png' },
   { id: 'batman_sigma_pout',  name: 'Bateman Sigma Pout',         src: '/memes/batman_sigma_pout.png' },
   { id: 'sigma_stare',        name: 'Sigma Thousand-Yard Stare',  src: '/memes/batman_sigma.jpg' },
+  { id: 'gigachad_jawline',   name: 'Gigachad Jawline',           src: '/memes/batman_sigma.jpg' },
   { id: 'heisenberg_arab',    name: 'Heisenberg Keffiyeh',        src: '/memes/heisenberg_arab.png' },
-  { id: 'disaster_girl',      name: 'Disaster Girl',              src: '/memes/disaster_girl.jpg' },
   // Laugh / happy
   { id: 'jaideep_smile',      name: 'Jaideep Bright Smile',       src: '/memes/jaideep_smile.png' },
   { id: 'jaideep_candid',     name: 'Jaideep Candid Laugh',       src: '/memes/jaideep_candid.jpg' },
@@ -26,7 +26,6 @@ const MEME_SOURCES: Array<{ id: string; name: string; src: string }> = [
   { id: 'krishna_divine',     name: 'Divine Lord Krishna',        src: '/memes/krishna_divine.jpg' },
   // Crazy / shock
   { id: 'undertaker_eyes',    name: 'Undertaker Crazy Eyes',      src: '/memes/undertaker_eyes.png' },
-  { id: 'overly_attached_girlfriend', name: 'Overly Attached GF', src: '/memes/overly_attached_girlfriend.jpg' },
   { id: 'angry_baby',         name: 'Angry Baby',                 src: '/memes/angry_baby.jpg' },
 ];
 

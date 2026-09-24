@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaceData, HandData, DetectionMetrics } from '../types';
 import { deviceManager } from '../services/deviceManager';
-import { Maximize2, Minimize2, Sparkles, Zap, Brain, Activity, Cpu, Radio } from 'lucide-react';
+import { Zap, Activity, Cpu, Radio } from 'lucide-react';
 
 // ─── 3-D Head Wireframe (unchanged logic) ────────────────────────────────────
 export function renderHeadWireframe(
@@ -175,25 +175,8 @@ interface TacticalHUDProps {
 
 // ─── Main HUD Component ───────────────────────────────────────────────────────
 export const TacticalHUD: React.FC<TacticalHUDProps> = ({
-  face, metrics, isBroadcasting, audioLevel, matchedMeme, aiThought, showMemeCard,
+  face, metrics, isBroadcasting, audioLevel,
 }) => {
-  const [isZoomExpanded, setIsZoomExpanded] = useState(false);
-  const [tick, setTick] = useState(0);
-
-  // Clock tick for live readout
-  useEffect(() => {
-    const id = setInterval(() => setTick(t => (t + 1) % 1000), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // Rotating fallback before face detected
-  const fallbackOptions = [
-    { name: 'Patrick Bateman Smirk', percentage: 88, image: '/memes/batman_sigma_smirk.png' },
-    { name: 'Heisenberg Keffiyeh',   percentage: 82, image: '/memes/heisenberg_arab.png' },
-    { name: 'Sigma Thousand-Yard',   percentage: 91, image: '/memes/batman_sigma.jpg' },
-  ];
-  const displayMeme = matchedMeme || fallbackOptions[Math.floor(Date.now() / 8000) % fallbackOptions.length];
-
   const isLockingIn = metrics.statusText.includes('LOCKING IN');
   const isTriggered = metrics.statusText.includes('TRIGGERED');
 
@@ -247,9 +230,8 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
           )}
         </div>
 
-        {/* RIGHT: Broadcast badge + AI Meme Card */}
+        {/* RIGHT: Broadcast badge */}
         <div className="flex flex-col items-end gap-2 pointer-events-auto">
-
           {/* Broadcast badge */}
           <div className={`flex items-center gap-2 glass-panel px-3 py-1.5 rounded-full ${
             isBroadcasting ? 'border-cyber-green/50 animate-flicker' : 'border-gray-700/50'
@@ -267,86 +249,6 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
               </div>
             )}
           </div>
-
-          {/* AI MEME BRAIN CARD */}
-          {showMemeCard && (
-            <div
-              className={`
-                relative glass-panel-cyan rounded-xl overflow-hidden cursor-pointer
-                transition-all duration-300 select-none
-                ${isZoomExpanded ? 'scale-110 ring-2 ring-cyan-400/60 shadow-2xl shadow-cyan-400/40' : 'hover:scale-105 animate-jumin-jumout'}
-                border-glow-cyan
-              `}
-              style={{ maxWidth: isZoomExpanded ? '300px' : '260px' }}
-              onClick={() => setIsZoomExpanded(p => !p)}
-              title="Click to zoom meme preview"
-            >
-              {/* Scanning line animation */}
-              <div className="scan-line" />
-
-              {/* Card header bar */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-cyan-500/20 bg-cyan-950/30">
-                <Brain className="w-3 h-3 text-cyan-400 animate-pulse" />
-                <span className="text-[9px] font-bold text-cyan-400 tracking-widest uppercase font-cyber">AI MEME BRAIN</span>
-                <span className="ml-auto text-[8px] text-cyan-600">v2.0</span>
-                {isZoomExpanded
-                  ? <Minimize2 className="w-2.5 h-2.5 text-cyan-400" />
-                  : <Maximize2 className="w-2.5 h-2.5 text-cyan-400" />
-                }
-              </div>
-
-              {/* Card body */}
-              <div className="flex items-center gap-3 p-2.5">
-                {/* Meme thumbnail */}
-                <div className="relative shrink-0 rounded-lg overflow-hidden border border-cyan-400/60 shadow-lg shadow-cyan-400/20"
-                  style={{ width: isZoomExpanded ? 96 : 60, height: isZoomExpanded ? 96 : 60 }}
-                >
-                  <img
-                    src={displayMeme.image}
-                    alt={displayMeme.name}
-                    className="w-full h-full object-cover transition-all duration-400"
-                  />
-                  {/* Match % overlay */}
-                  <div className="absolute bottom-0 inset-x-0 bg-black/75 text-center text-[8px] font-bold text-cyan-300 py-0.5">
-                    {displayMeme.percentage}% MATCH
-                  </div>
-                </div>
-
-                {/* Text info */}
-                <div className="flex flex-col gap-1 flex-1 min-w-0">
-                  <span className="text-[11px] font-bold text-white leading-tight truncate font-cyber">
-                    {displayMeme.name}
-                  </span>
-
-                  {/* AI thought — typewriter feel with cursor */}
-                  <div className="text-[8px] text-amber-300/85 font-mono bg-black/50 px-1.5 py-1 rounded border border-amber-500/25 leading-relaxed">
-                    {(aiThought || 'AI: SCANNING MEME DATABASE...').substring(0, 52)}
-                    <span className="animate-blink">█</span>
-                  </div>
-
-                  {/* Confidence bar */}
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1 h-1.5 bg-black/60 rounded-full overflow-hidden border border-cyan-800/50">
-                      <div
-                        className="h-full rounded-full transition-all duration-300"
-                        style={{
-                          width: `${displayMeme.percentage}%`,
-                          background: `linear-gradient(90deg, #0891b2, #00f0ff)`,
-                          boxShadow: '0 0 6px rgba(0,240,255,0.6)',
-                        }}
-                      />
-                    </div>
-                    <span className="text-[9px] text-cyan-300 font-bold w-8 text-right">{displayMeme.percentage}%</span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Sparkles className="w-2.5 h-2.5 text-cyan-500/50" />
-                    <span className="text-[7px] text-cyan-600 uppercase tracking-wider">JUMIN & JUMOUT ACTIVE</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

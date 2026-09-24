@@ -10,6 +10,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <!-- Netlify Badge & Drawer Suppression -->
+    <script>
+      window.NETLIFY_HUD = false;
+      window.netlifyHud = false;
+      function stripNetlify() {
+        document.querySelectorAll('script[src*="netlify/scripts"], [data-netlify-site-id], netlify-hud, [id*="netlify-hud"], [class*="netlify-hud"], [id*="netlify-feedback"], [class*="netlify-feedback"], [data-netlify-badge], .netlify-badge, [class*="netlify"], a[href*="netlify.com"]').forEach(function(el) {
+          try { el.remove(); } catch(e) {}
+        });
+      }
+      stripNetlify();
+      if (typeof MutationObserver !== 'undefined') {
+        new MutationObserver(stripNetlify).observe(document.documentElement, { childList: true, subtree: true });
+      }
+      window.addEventListener('DOMContentLoaded', stripNetlify);
+      window.addEventListener('load', stripNetlify);
+    </script>
   </head>
   <body class="bg-[#05070a] text-white overflow-hidden select-none m-0 p-0 w-full h-full">
     <div id="root"></div>

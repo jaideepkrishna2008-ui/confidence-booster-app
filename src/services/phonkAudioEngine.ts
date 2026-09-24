@@ -447,36 +447,21 @@ class PhonkAudioEngine {
     if (this.ctx && this.ctx.state === 'suspended') {
       await this.ctx.resume();
     }
+    if (!this.ctx || !this.masterGain) return;
     this.stop();
+    this.isPlaying = true;
 
-    if (!this.tomadaAudioBuffer) {
-      await this.preloadTomadaAudio();
-    }
+    const now = this.ctx.currentTime;
+    this.playKick(now, 1.5);
+    this.play808Sub(now, 1.4, 50.0, 55, 1);
+    this.playPhonkCowbell(now, 740, 0.8);
+    this.playPhonkCowbell(now + 0.18, 880, 0.75);
+    this.ensureBroadcastProceduralDrop(0);
 
-    const buf = this.tomadaAudioBuffer || this.moggedAudioBuffer;
-    if (buf && this.ctx && this.masterGain) {
-      this.isPlaying = true;
-      const src = this.ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(this.masterGain);
-      src.start(0, 3.2, 4.2);
-      this.currentAudioSource = src;
-      this.ensureBroadcastPhonkBuffer(buf, 3.2, 4.2);
-
-      const timer = window.setTimeout(() => {
-        this.stop();
-      }, 4250);
-      this.activeTimers.push(timer);
-    } else {
-      if (!this.ctx || !this.masterGain) return;
-      const now = this.ctx.currentTime;
-      this.playPhonkCowbell(now, 740, 0.7);
-      this.playPhonkCowbell(now + 0.2, 880, 0.75);
-      this.playBassDropImpact(0.55);
-      this.playKick(now + 0.55, 1.3);
-      this.play808Sub(now + 0.55, 1.2, 46.2, 55, 1);
-      this.ensureBroadcastProceduralDrop(0.55);
-    }
+    const endTimer = window.setTimeout(() => {
+      this.stop();
+    }, 1500);
+    this.activeTimers.push(endTimer);
   }
 
   playMemeSound(meme: string): void {
@@ -509,24 +494,37 @@ class PhonkAudioEngine {
     }
   }
 
-  playVinylScratch(): void {
+  async playVinylScratch(): Promise<void> {
+    this.initContext();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      await this.ctx.resume();
+    }
     if (!this.ctx || !this.masterGain) return;
     const now = this.ctx.currentTime;
+
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400, now);
+    filter.Q.setValueAtTime(2.5, now);
+
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(2500, now);
-    osc.frequency.linearRampToValueAtTime(400, now + 0.12);
-    osc.frequency.linearRampToValueAtTime(1800, now + 0.22);
+    osc.frequency.setValueAtTime(3200, now);
+    osc.frequency.exponentialRampToValueAtTime(340, now + 0.09);
+    osc.frequency.exponentialRampToValueAtTime(2100, now + 0.18);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.27);
 
-    gain.gain.setValueAtTime(0.4, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
 
-    osc.connect(gain);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(this.masterGain);
 
     osc.start(now);
-    osc.stop(now + 0.26);
+    osc.stop(now + 0.33);
   }
 
   async playEditSequence(
