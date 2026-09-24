@@ -161,12 +161,13 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
 }) => {
   const [isZoomExpanded, setIsZoomExpanded] = useState(false);
 
-  // Fallback meme if none matched yet
-  const displayMeme = matchedMeme || {
-    name: 'Batman Sigma Smirk',
-    percentage: 88,
-    image: '/memes/batman_sigma_smirk.png',
-  };
+  // Rotate fallback meme so HUD is never blank-but-boring (pick based on second since epoch)
+  const fallbackOptions = [
+    { name: 'Patrick Bateman Smirk', percentage: 88, image: '/memes/batman_sigma_smirk.png' },
+    { name: 'Heisenberg Keffiyeh',   percentage: 82, image: '/memes/heisenberg_arab.png' },
+    { name: 'Sigma Thousand-Yard',   percentage: 91, image: '/memes/batman_sigma.jpg' },
+  ];
+  const displayMeme = matchedMeme || fallbackOptions[Math.floor(Date.now() / 8000) % fallbackOptions.length];
 
   const isLockingIn = metrics.statusText.includes('LOCKING IN');
 

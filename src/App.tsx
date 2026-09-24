@@ -332,7 +332,7 @@ export const App: React.FC = () => {
               },
               getSessionFrames: () => frameBuffer.getSessionFrames(),
               getPostTriggerMoments: (now) => frameBuffer.getPostTriggerMoments(sessionStartTime, now),
-              matchedMemeImage: matchedMemeRef.current?.image || '/memes/batman_sigma_smirk.png',
+              matchedMemeImage: matchedMemeRef.current?.image || '/memes/jaideep_smile.png',
               onDropImpact: onImpact,
               onComplete: onEnd,
             });

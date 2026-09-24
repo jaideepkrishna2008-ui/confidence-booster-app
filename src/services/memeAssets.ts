@@ -11,20 +11,23 @@ export interface MemeAssetItem {
 }
 
 const MEME_SOURCES: Array<{ id: string; name: string; src: string }> = [
-  { id: 'batman_sigma_smirk', name: 'Batman Sigma Smirk', src: '/memes/batman_sigma_smirk.png' },
-  { id: 'batman_sigma_pout', name: 'Batman Sigma Pout', src: '/memes/batman_sigma_pout.png' },
-  { id: 'batman_sigma', name: 'Patrick Bateman Classic', src: '/memes/batman_sigma.jpg' },
-  { id: 'undertaker_eyes', name: 'The Undertaker Crazy Eyes', src: '/memes/undertaker_eyes.png' },
-  { id: 'heisenberg_arab', name: 'Heisenberg Keffiyeh', src: '/memes/heisenberg_arab.png' },
-  { id: 'jaideep_smile', name: 'Jaideep Bright Smile', src: '/memes/jaideep_smile.png' },
-  { id: 'jaideep_candid', name: 'Jaideep Candid Laugh', src: '/memes/jaideep_candid.jpg' },
-  { id: 'krishna_divine', name: 'Divine Lord Krishna Aura', src: '/memes/krishna_divine.jpg' },
-  { id: 'leonardo_dicaprio', name: 'Leonardo DiCaprio', src: '/memes/leonardo_dicaprio.jpg' },
-  { id: 'success_kid', name: 'Success Kid', src: '/memes/success_kid.jpg' },
-  { id: 'disaster_girl', name: 'Disaster Girl', src: '/memes/disaster_girl.jpg' },
-  { id: 'gene_wilder', name: 'Gene Wilder', src: '/memes/gene_wilder.jpg' },
-  { id: 'overly_attached_girlfriend', name: 'Overly Attached Girlfriend', src: '/memes/overly_attached_girlfriend.jpg' },
-  { id: 'angry_baby', name: 'Angry Baby', src: '/memes/angry_baby.jpg' },
+  // Sigma / cold
+  { id: 'batman_sigma_smirk', name: 'Patrick Bateman Smirk',     src: '/memes/batman_sigma_smirk.png' },
+  { id: 'batman_sigma_pout',  name: 'Bateman Sigma Pout',         src: '/memes/batman_sigma_pout.png' },
+  { id: 'sigma_stare',        name: 'Sigma Thousand-Yard Stare',  src: '/memes/batman_sigma.jpg' },
+  { id: 'heisenberg_arab',    name: 'Heisenberg Keffiyeh',        src: '/memes/heisenberg_arab.png' },
+  { id: 'disaster_girl',      name: 'Disaster Girl',              src: '/memes/disaster_girl.jpg' },
+  // Laugh / happy
+  { id: 'jaideep_smile',      name: 'Jaideep Bright Smile',       src: '/memes/jaideep_smile.png' },
+  { id: 'jaideep_candid',     name: 'Jaideep Candid Laugh',       src: '/memes/jaideep_candid.jpg' },
+  { id: 'leonardo_dicaprio',  name: 'Leo DiCaprio Toast',         src: '/memes/leonardo_dicaprio.jpg' },
+  { id: 'success_kid',        name: 'Success Kid',                src: '/memes/success_kid.jpg' },
+  { id: 'gene_wilder',        name: 'Gene Wilder Wonka',          src: '/memes/gene_wilder.jpg' },
+  { id: 'krishna_divine',     name: 'Divine Lord Krishna',        src: '/memes/krishna_divine.jpg' },
+  // Crazy / shock
+  { id: 'undertaker_eyes',    name: 'Undertaker Crazy Eyes',      src: '/memes/undertaker_eyes.png' },
+  { id: 'overly_attached_girlfriend', name: 'Overly Attached GF', src: '/memes/overly_attached_girlfriend.jpg' },
+  { id: 'angry_baby',         name: 'Angry Baby',                 src: '/memes/angry_baby.jpg' },
 ];
 
 class MemeAssetManager {
@@ -103,8 +106,11 @@ class MemeAssetManager {
       }
     }
 
-    // Default to Batman Sigma Smirk if available
-    const defaultMeme = this.cache.get('batman_sigma_smirk') || this.cache.get('/memes/batman_sigma_smirk.png');
+    // Default to jaideep_smile if available, else batman sigma
+    const defaultMeme =
+      this.cache.get('jaideep_smile') ||
+      this.cache.get('batman_sigma_smirk') ||
+      this.cache.get('/memes/batman_sigma_smirk.png');
     if (defaultMeme && defaultMeme.loaded) {
       return defaultMeme.image;
     }
