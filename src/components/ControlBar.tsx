@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Camera, FlipHorizontal, Volume2, VolumeX, Radio, Tv,
-  Zap, Download, Maximize, Minimize, Sliders, Smile, Loader2,
+  Zap, Download, Maximize, Minimize, Sliders, Loader2,
+  Sparkles, ChevronDown, Activity,
 } from 'lucide-react';
 import { TriggerMode, EditPreset } from '../types';
 
@@ -46,35 +47,45 @@ const MODE_LABELS: Record<string, string> = {
   glasses:    'GLASSES',
 };
 
-// Slim icon-button with tooltip
+// Compact icon button with tooltip
 const IconBtn: React.FC<{
   onClick: () => void;
   title: string;
   active?: boolean;
-  activeColor?: string;
-  danger?: boolean;
+  variant?: 'green' | 'cyan' | 'pink' | 'default';
   children: React.ReactNode;
-}> = ({ onClick, title, active, activeColor = 'cyber-green', danger, children }) => (
-  <button
-    onClick={onClick}
-    title={title}
-    className={`
-      relative group p-1.5 rounded transition-all duration-150 cursor-pointer
-      ${danger
-        ? active ? 'text-cyber-pink bg-cyber-pink/15 border border-cyber-pink/40' : 'text-gray-400 hover:text-cyber-pink hover:bg-cyber-pink/10 border border-transparent'
-        : active ? `text-${activeColor} bg-${activeColor}/10 border border-${activeColor}/40 shadow-[0_0_8px_rgba(0,255,102,0.2)]`
-                 : 'text-gray-400 hover:text-white hover:bg-white/8 border border-transparent'
-      }
-    `}
-  >
-    {children}
-    <span className="
-      absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1
-      text-[9px] font-mono bg-[#0a0e16]/95 border border-gray-700 rounded whitespace-nowrap
-      opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50
-    ">{title}</span>
-  </button>
-);
+}> = ({ onClick, title, active, variant = 'green', children }) => {
+  let activeClasses = 'text-cyber-green bg-cyber-green/15 border-cyber-green/60 shadow-[0_0_10px_rgba(0,255,102,0.25)]';
+  if (variant === 'pink') {
+    activeClasses = 'text-cyber-pink bg-cyber-pink/15 border-cyber-pink/60 shadow-[0_0_10px_rgba(255,0,85,0.25)]';
+  } else if (variant === 'cyan') {
+    activeClasses = 'text-cyber-cyan bg-cyber-cyan/15 border-cyber-cyan/60 shadow-[0_0_10px_rgba(0,240,255,0.25)]';
+  }
+
+  const inactiveClasses = 'text-gray-400 bg-black/40 border-white/10 hover:text-white hover:border-cyber-green/40 hover:bg-cyber-green/5';
+
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className={`
+        relative group h-8 w-8 rounded-lg border flex items-center justify-center
+        transition-all duration-150 cursor-pointer select-none
+        ${active ? activeClasses : inactiveClasses}
+      `}
+    >
+      {children}
+      <span className="
+        absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1
+        text-[9px] font-mono bg-[#080d16]/95 text-gray-200 border border-gray-700/80 rounded-md
+        whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200
+        pointer-events-none z-50 shadow-lg
+      ">
+        {title}
+      </span>
+    </button>
+  );
+};
 
 export const ControlBar: React.FC<ControlBarProps> = ({
   onSwitchCamera, onToggleMirror, isMirrored,
@@ -82,9 +93,9 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   triggerMode, onChangeTriggerMode, selectedPreset, onChangePreset,
   onForceTrigger, onDownloadClip, hasDownloadableClip,
   isConverting = false, sensitivity, onChangeSensitivity,
-  isEditing, isMemeMode, onToggleMemeMode,
+  isEditing,
 }) => {
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -99,152 +110,178 @@ export const ControlBar: React.FC<ControlBarProps> = ({
   return (
     <div className="
       absolute bottom-0 left-0 right-0 z-30
-      flex items-center justify-between gap-1.5
-      px-3 py-2
-      bg-[#040810]/95 border-t border-cyber-green/25
+      bg-[#040810]/95 border-t border-cyber-green/30
       backdrop-blur-xl
-      shadow-[0_-4px_30px_rgba(0,255,102,0.08)]
+      shadow-[0_-8px_32px_rgba(0,0,0,0.8),0_-1px_15px_rgba(0,255,102,0.12)]
       select-none font-mono text-xs
+      py-2 px-3 md:px-6
       animate-slide-up
     ">
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4 flex-wrap sm:flex-nowrap">
 
-      {/* ── LEFT GROUP: Camera & Audio ─────────────────────────────── */}
-      <div className="flex items-center gap-1">
-        {/* Divider label */}
-        <span className="text-[8px] text-gray-600 uppercase tracking-widest pr-1 hidden lg:block">CAM</span>
+        {/* ── LEFT POD: Camera & Audio ─────────────────────────────── */}
+        <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-xl p-1 backdrop-blur-md shrink-0">
+          <IconBtn onClick={onSwitchCamera} title="Switch Camera (Front / Rear)">
+            <Camera className="w-3.5 h-3.5" />
+          </IconBtn>
 
-        <IconBtn onClick={onSwitchCamera} title="Switch Camera (Front / Rear)">
-          <Camera className="w-3.5 h-3.5" />
-        </IconBtn>
+          <IconBtn onClick={onToggleMirror} title="Toggle Mirror Mode" active={isMirrored} variant="green">
+            <FlipHorizontal className="w-3.5 h-3.5" />
+          </IconBtn>
 
-        <IconBtn onClick={onToggleMirror} title="Toggle Mirror" active={isMirrored}>
-          <FlipHorizontal className="w-3.5 h-3.5" />
-        </IconBtn>
+          <div className="w-px h-5 bg-white/10 mx-0.5" />
 
-        {/* Divider */}
-        <div className="w-px h-5 bg-gray-700/70 mx-0.5" />
-
-        <IconBtn onClick={onToggleSound} title={soundMuted ? 'Unmute Phonk' : 'Mute Phonk'} danger={soundMuted}>
-          {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-        </IconBtn>
-
-        <button
-          onClick={onOpenSoundboard}
-          title="Phonk Soundboard"
-          className="btn-ghost-green btn-cyber text-[9px] hidden sm:flex"
-        >
-          <Radio className="w-3 h-3" />
-          TRACKS
-        </button>
-
-        <button
-          onClick={onOpenObsModal}
-          title="OBS & Virtual Cable Settings"
-          className="btn-ghost-cyan btn-cyber text-[9px] hidden sm:flex"
-        >
-          <Tv className="w-3 h-3" />
-          <span className="hidden md:inline">STREAM</span>
-        </button>
-      </div>
-
-      {/* ── CENTER GROUP: Presets, Mode, TRIGGER ────────────────────── */}
-      <div className="flex items-center gap-2 flex-1 justify-center max-w-lg">
-        {/* Preset Selector */}
-        <div className="relative hidden sm:block">
-          <label className="absolute -top-3.5 left-0 text-[8px] text-gray-500 tracking-widest uppercase">PRESET</label>
-          <select
-            value={selectedPreset}
-            onChange={(e) => onChangePreset(e.target.value as EditPreset)}
-            className="select-cyber pr-6"
+          <IconBtn
+            onClick={onToggleSound}
+            title={soundMuted ? 'Unmute Phonk Audio' : 'Mute Phonk Audio'}
+            active={soundMuted}
+            variant="pink"
           >
-            {Object.entries(PRESET_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
-        </div>
+            {soundMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+          </IconBtn>
 
-        {/* Trigger Mode Selector */}
-        <div className="relative hidden md:block">
-          <label className="absolute -top-3.5 left-0 text-[8px] text-gray-500 tracking-widest uppercase">MODE</label>
-          <select
-            value={triggerMode}
-            onChange={(e) => onChangeTriggerMode(e.target.value as TriggerMode)}
-            className="select-cyber pr-6"
-          >
-            {Object.entries(MODE_LABELS).map(([val, label]) => (
-              <option key={val} value={val}>{label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* ── MAIN TRIGGER BUTTON ── */}
-        <button
-          onClick={onForceTrigger}
-          disabled={isEditing}
-          title="Trigger edit (or press SPACEBAR)"
-          className={`
-            btn-cyber text-[11px] px-4 py-2 relative overflow-hidden transition-all
-            ${isEditing
-              ? 'bg-amber-400/15 border border-amber-400/50 text-amber-300 cursor-wait animate-pulse'
-              : 'btn-primary animate-neon-pulse hover:animate-none'
-            }
-          `}
-        >
-          {isEditing ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              EDITING...
-            </>
-          ) : (
-            <>
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              TRIGGER
-              <span className="hidden lg:inline ml-1 text-[8px] opacity-60">[ SPACE ]</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* ── RIGHT GROUP: Sensitivity + Download + Fullscreen ─────── */}
-      <div className="flex items-center gap-2">
-
-        {/* Sensitivity Slider */}
-        <div className="hidden lg:flex flex-col items-center gap-0.5">
-          <div className="flex items-center gap-1">
-            <Sliders className="w-2.5 h-2.5 text-gray-500" />
-            <span className="text-[8px] text-gray-500 uppercase tracking-widest">SENS {sensitivity.toFixed(1)}×</span>
-          </div>
-          <input
-            type="range" min="0.5" max="2" step="0.1"
-            value={sensitivity}
-            onChange={(e) => onChangeSensitivity(parseFloat(e.target.value))}
-            className="slider-cyber w-20"
-          />
-        </div>
-
-        {/* Download Button */}
-        {hasDownloadableClip && (
           <button
-            onClick={onDownloadClip}
-            disabled={isConverting}
-            title={isConverting ? 'Processing MP4...' : 'Download last clip'}
-            className={`p-1.5 rounded border transition-all ${
-              isConverting
-                ? 'border-amber-400/40 text-amber-400 animate-pulse cursor-wait'
-                : 'btn-ghost-green border border-cyber-green/40 hover:bg-cyber-green hover:text-black'
-            }`}
+            onClick={onOpenSoundboard}
+            title="Phonk Soundboard & Music Tracks"
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-[10px] font-cyber font-bold tracking-wider uppercase bg-cyber-green/10 text-cyber-green border border-cyber-green/35 hover:bg-cyber-green/20 hover:border-cyber-green hover:shadow-[0_0_12px_rgba(0,255,102,0.25)] active:scale-95 transition-all cursor-pointer"
           >
-            {isConverting
-              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              : <Download className="w-3.5 h-3.5" />
-            }
+            <Radio className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">TRACKS</span>
           </button>
-        )}
 
-        {/* Fullscreen */}
-        <IconBtn onClick={toggleFullscreen} title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}>
-          {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
-        </IconBtn>
+          <button
+            onClick={onOpenObsModal}
+            title="OBS Virtual Camera & Stream Settings"
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-[10px] font-cyber font-bold tracking-wider uppercase bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/35 hover:bg-cyber-cyan/20 hover:border-cyber-cyan hover:shadow-[0_0_12px_rgba(0,240,255,0.25)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">STREAM</span>
+          </button>
+        </div>
+
+        {/* ── CENTER POD: Presets, Mode, Hero Trigger ─────────────────── */}
+        <div className="flex items-center gap-2 bg-black/60 border border-cyber-green/25 rounded-xl p-1 shadow-[0_0_20px_rgba(0,255,102,0.08)] backdrop-blur-md">
+          {/* Preset Selector */}
+          <div className="relative hidden sm:flex items-center h-8 px-2.5 rounded-lg bg-black/80 border border-white/15 hover:border-cyber-green/50 focus-within:border-cyber-green focus-within:shadow-[0_0_12px_rgba(0,255,102,0.25)] transition-all gap-1.5">
+            <span className="text-[9px] font-cyber font-bold text-gray-500 uppercase tracking-widest shrink-0 flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5 text-cyber-green" />
+              PRESET
+            </span>
+            <select
+              value={selectedPreset}
+              onChange={(e) => onChangePreset(e.target.value as EditPreset)}
+              className="bg-transparent text-cyber-green font-mono text-[11px] font-bold focus:outline-none cursor-pointer appearance-none pr-5"
+            >
+              {Object.entries(PRESET_LABELS).map(([val, label]) => (
+                <option key={val} value={val} className="bg-[#080d16] text-cyber-green font-mono">
+                  {label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3 h-3 text-cyber-green pointer-events-none absolute right-2" />
+          </div>
+
+          {/* Trigger Mode Selector */}
+          <div className="relative hidden md:flex items-center h-8 px-2.5 rounded-lg bg-black/80 border border-white/15 hover:border-cyber-cyan/50 focus-within:border-cyber-cyan focus-within:shadow-[0_0_12px_rgba(0,240,255,0.25)] transition-all gap-1.5">
+            <span className="text-[9px] font-cyber font-bold text-gray-500 uppercase tracking-widest shrink-0 flex items-center gap-1">
+              <Activity className="w-2.5 h-2.5 text-cyber-cyan" />
+              MODE
+            </span>
+            <select
+              value={triggerMode}
+              onChange={(e) => onChangeTriggerMode(e.target.value as TriggerMode)}
+              className="bg-transparent text-cyber-cyan font-mono text-[11px] font-bold focus:outline-none cursor-pointer appearance-none pr-5"
+            >
+              {Object.entries(MODE_LABELS).map(([val, label]) => (
+                <option key={val} value={val} className="bg-[#080d16] text-cyber-cyan font-mono">
+                  {label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3 h-3 text-cyber-cyan pointer-events-none absolute right-2" />
+          </div>
+
+          {/* Main TRIGGER Button */}
+          <button
+            onClick={onForceTrigger}
+            disabled={isEditing}
+            title="Trigger Instant Edit (or press SPACEBAR)"
+            className={`
+              h-8 px-4 rounded-lg font-cyber font-black text-xs tracking-wider uppercase
+              flex items-center gap-2 transition-all cursor-pointer select-none whitespace-nowrap
+              ${isEditing
+                ? 'bg-amber-400/20 border border-amber-400/60 text-amber-300 animate-pulse cursor-wait'
+                : 'bg-cyber-green text-black border border-cyber-green hover:bg-white hover:text-black hover:border-white shadow-[0_0_18px_rgba(0,255,102,0.5)] active:scale-95'
+              }
+            `}
+          >
+            {isEditing ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-300" />
+                <span>EDITING...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5 fill-current" />
+                <span>TRIGGER</span>
+                <span className="hidden lg:inline text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/25 text-black">
+                  SPACE
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* ── RIGHT POD: Sensitivity, Download, Fullscreen ────────────── */}
+        <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-xl p-1 backdrop-blur-md shrink-0">
+          {/* Sensitivity Slider Pill */}
+          <div className="hidden lg:flex items-center gap-2 h-8 px-2.5 rounded-lg bg-black/60 border border-white/10">
+            <Sliders className="w-3 h-3 text-gray-400" />
+            <span className="text-[9px] font-cyber text-gray-400 uppercase tracking-wider whitespace-nowrap">
+              SENS <span className="text-cyber-green font-bold">{sensitivity.toFixed(1)}×</span>
+            </span>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={sensitivity}
+              onChange={(e) => onChangeSensitivity(parseFloat(e.target.value))}
+              className="slider-cyber w-16 cursor-pointer"
+            />
+          </div>
+
+          {/* Download Clip Button */}
+          {hasDownloadableClip && (
+            <button
+              onClick={onDownloadClip}
+              disabled={isConverting}
+              title={isConverting ? 'Processing MP4...' : 'Download last edit clip'}
+              className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 text-[10px] font-cyber font-bold tracking-wider uppercase transition-all ${
+                isConverting
+                  ? 'bg-amber-400/20 border border-amber-400/60 text-amber-300 animate-pulse cursor-wait'
+                  : 'bg-cyber-green text-black border border-cyber-green hover:bg-white hover:text-black shadow-[0_0_15px_rgba(0,255,102,0.4)] active:scale-95'
+              }`}
+            >
+              {isConverting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">SAVE CLIP</span>
+            </button>
+          )}
+
+          {/* Fullscreen Button */}
+          <IconBtn
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+            variant="default"
+          >
+            {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5" />}
+          </IconBtn>
+        </div>
+
       </div>
     </div>
   );
