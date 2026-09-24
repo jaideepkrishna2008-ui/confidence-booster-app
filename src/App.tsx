@@ -479,19 +479,6 @@ export const App: React.FC = () => {
     return () => cancelAnimationFrame(animId);
   }, [triggerMode, isMirrored, isMemeMode, triggerEdit]);
 
-  // Keyboard Shortcuts (SPACE to trigger, ESC to exit Zero UI)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        triggerEdit('manual');
-      } else if (e.code === 'Escape') {
-        setIsZeroUi(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [triggerEdit]);
 
   // Projector launcher (Document Picture-in-Picture or Popup window)
   const openProjectorWindow = useCallback(async (mode: 'pip' | 'window' = 'pip') => {
@@ -609,6 +596,33 @@ export const App: React.FC = () => {
     setSoundMuted(newVal);
     phonkAudio.setMuted(newVal);
   };
+
+  // Tactical Hotkeys: SPACE (Trigger), M (Mirror), S (Sound Mute), C (Camera), T (Tracks), Z (Zero-UI), ESC (Exit Zero-UI)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        triggerEdit('manual');
+      } else if (e.code === 'Escape') {
+        setIsZeroUi(false);
+      } else if (e.code === 'KeyM') {
+        handleToggleMirror();
+      } else if (e.code === 'KeyS') {
+        handleToggleSound();
+      } else if (e.code === 'KeyC') {
+        handleSwitchCamera();
+      } else if (e.code === 'KeyT') {
+        setIsSoundboardOpen((prev) => !prev);
+      } else if (e.code === 'KeyZ') {
+        setIsZeroUi((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [triggerEdit, soundMuted, isMirrored]);
 
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden select-none font-mono text-white">
